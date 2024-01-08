@@ -25,12 +25,12 @@ const initMap = async () => {
     fullscreenButton: false,
     infoBox: false,
     selectionIndicator: false,
-    imageryProvider: new Cesium.UrlTemplateImageryProvider({
-      url: "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
-      // url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-      minimumLevel: 3,
-      maximumLevel: 18,
-    }),
+    // imageryProvider: new Cesium.UrlTemplateImageryProvider({
+    //   url: "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+    //   // url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+    //   minimumLevel: 3,
+    //   maximumLevel: 18,
+    // }),
   });
   // 相机飞入点
   viewer.value.camera.setView({

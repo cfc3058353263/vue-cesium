@@ -17,7 +17,7 @@ export const { drawer, form } = toRefs(data)
 const polygonList: Array<{ id: string, name: string; data: any; show: boolean; color: string, height: number }> = []
 // 当前选中的图形id
 let polygonId: string | null = null
-// 开启绘制是储存绘制节点的信息
+// 储存绘制节点的信息 使用的是cartesain3的坐标格式
 let pointArr: any[] = []
 // 当前点位的数据
 let nowPoint: any[] = []
@@ -29,7 +29,7 @@ let pointAndLineEntity: any = {
 }
 // 当前选择的编辑点
 let nowEditPoint: any[] = []
-// 是否开始画多边形
+// 是否开始绘制
 let isDrawLine = false
 // 是否形成面
 let isDrawPolyGon = false
@@ -56,7 +56,6 @@ export class editPolyGonFunC {
      * @param name 判断删除的实体类型
      */
     delDemoEntity = (name: string) => {
-
         // 绘制点
         name == 'point_name' && pointAndLineEntity.pointEntityArr.forEach((item: any) => {
             this.viewer.entities.remove(item)
@@ -94,9 +93,9 @@ export class editPolyGonFunC {
      * @param lonAndLat 
      * @returns 
      */
-    drawPoint = (lonAndLat: number[]) => {
+    drawPoint = (cartesain3: number[]) => {
         const entityPoint = this.viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(lonAndLat[0], lonAndLat[1], lonAndLat[2]),
+            position: cartesain3,
             name: 'point_name',
             point: {
                 color: Cesium.Color.fromCssColorString('#fc3d4a'),
@@ -113,11 +112,10 @@ export class editPolyGonFunC {
      * @returns 
      */
     drawLine = (name: string, lineArr: any[]) => {
-        console.log(Cesium.Cartesian3.fromDegreesArrayHeights(lineArr))
         const entityLine = this.viewer.entities.add({
             name: name,
             polyline: {
-                positions: new Cesium.CallbackProperty(() => Cesium.Cartesian3.fromDegreesArrayHeights(lineArr), false),
+                positions: new Cesium.CallbackProperty(() => lineArr, false),
                 width: 5,
                 material: Cesium.Color.fromCssColorString('#fcc31f'),
             }
@@ -129,24 +127,6 @@ export class editPolyGonFunC {
     * @param lonAndLat 经纬度
     */
     drawPolyGon = (lonAndLat: any[]) => {
-        // 返回lonAndLat中的经度和纬度,去掉高程
-        let lonLats = (data: any) => {
-            let arr = []
-            for (let d in data) {
-                //判断经纬度范围
-                if (
-                    data[d][0] >= -180 &&
-                    data[d][0] <= 180 &&
-                    data[d][1] >= -90 &&
-                    data[d][1] <= 90
-                ) {
-                    arr.push(data[d][0], data[d][1])
-                } else {
-                    console.log('经纬度数值不对：', data[d][0], data[d][1])
-                }
-            }
-            return arr
-        }
         const uuid = guid()
         // 绘制图形
         this.viewer.entities.add({
@@ -155,15 +135,17 @@ export class editPolyGonFunC {
             polygon: {
                 clampToGround: true, //开启贴地
                 // 定义多边形及其孔的线性环的层次结构
-                hierarchy: new Cesium.PolygonHierarchy(
-                    // Cesium.Cartesian3.fromDegreesArray 根据经纬度返回三维笛卡尔坐标的数组
-                    Cesium.Cartesian3.fromDegreesArray(lonLats(lonAndLat))
-                ),
+                // hierarchy: new Cesium.PolygonHierarchy(
+                //     // Cesium.Cartesian3.fromDegreesArray 根据经纬度返回三维笛卡尔坐标的数组
+                //     Cesium.Cartesian3.fromDegreesArray(lonLats(lonAndLat))
+                // ),
+                hierarchy: new Cesium.CallbackProperty(() => {
+                    return new Cesium.PolygonHierarchy(lonAndLat);
+                }, false),
                 material: Cesium.Color.fromCssColorString('#ffffff80'),
                 extrudedHeight: 0
             }
         });
-        console.log(Cesium.Cartesian3.fromDegreesArray(lonLats(lonAndLat)))
         polygonList.push({
             id: uuid,
             name: "",
@@ -179,15 +161,18 @@ export class editPolyGonFunC {
      * @param lonAndLat 经纬度集合
      */
     drawPolyhedron = () => {
+        // console.log(this.viewer.entities.getById(polygonId).polygon.hierarchy._callback())
+        // return
         // 获取当前点击的实体坐标
-        const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._value.positions;
-        console.log(positions)
+        const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._callback().positions;
         this.viewer.entities.removeById(polygonId);
         this.viewer.entities.add({
             id: polygonId,
             name: 'polyhedron_name',
             polygon: {
-                hierarchy: positions,
+                hierarchy: new Cesium.CallbackProperty(() => {
+                    return new Cesium.PolygonHierarchy(positions);
+                }, false),
                 extrudedHeight: form.value.height, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
                 height: 0, // 是指polygon距离地面的高度
                 material: Cesium.Color.fromCssColorString(form.value.color),
@@ -224,14 +209,14 @@ export class editPolyGonFunC {
      */
     save = () => {
         const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._value.positions;
-        positions.map(item=>{
+        positions.map(item => {
             const lnglat = Cesium.Cartographic.fromCartesian(item)
             console.log(lnglat)
         })
         var cartographics = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions)//一组坐标
         console.log('cartographics', cartographics)
         // const polygon = polygonList.find(item => item.id === form.id)
-        console.log(JSON.parse(local.get('polygon')))
+        // console.log(JSON.parse(local.get('polygon')))
     }
     /**
     * 开启绘制
@@ -276,7 +261,7 @@ export class editPolyGonFunC {
                         this.delDemoEntity('polygon_point')
                         pointAndLineEntity.pointEntityArr = []
                         // 选中多边形实体 循环添加编辑点位
-                        for (let cartesian of pick.id.polygon.hierarchy._value.positions) {
+                        for (let cartesian of pick.id.polygon.hierarchy._callback().positions) {
                             const point = this.viewer.entities.add({
                                 name: "polygon_point",
                                 position: cartesian,
@@ -293,38 +278,36 @@ export class editPolyGonFunC {
                     }
                 }
             } else if (pick && pick.id && pick.id.point && (pick.id.name == 'polygon_point')) {
-                // console.log('编辑点保存');
+                // 清空数据
                 nowEditPoint = []
+                // 添加当前点位的数据
                 nowEditPoint.push(pick)
+                // 开启编辑
                 isDrawPolyGon = true
             } else {
                 // 开始绘制多边形
                 if (isDrawLine) {
+                    // 鼠标当前位置的cartesain3坐标
                     let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.position);
-                    
-                    // 将屏幕转换为经纬度坐标
-                    let nowPosition = this.getLonOrLat(event.position)
                     // 点数据保存
-                    pointArr.push([nowPosition.longitude, nowPosition.latitude, 0])
+                    pointArr.push(cartesain3)
                     // 当前点数据
-                    nowPoint = [nowPosition.longitude, nowPosition.latitude, 0]
+                    nowPoint = cartesain3
                     // 绘制点
-                    const point = this.drawPoint([nowPosition.longitude, nowPosition.latitude, 0])
+                    const point = this.drawPoint(cartesain3)
+                    // 保存点的实体
                     pointAndLineEntity.pointEntityArr.push(point)
-                    //isDrawLines设为true 开始画多边形
-                    isDrawLine = true
                     // 画线
                     const num = pointArr.length
+                    // 当节点数量大于1时开会绘制线
                     if (num > 1) {
                         // 删除鼠标移动画线
                         this.delDemoEntity('line_demo_name')
                         // 生成线的实体
-                        const line = this.drawLine('line_name', [...pointArr[num - 2], ...pointArr[num - 1]])
+                        const line = this.drawLine('line_name', [pointArr[num - 2], pointArr[num - 1]])
                         // 保存线的实体
                         pointAndLineEntity.lineEntityArr.push(line)
                     }
-                } else {
-
                 }
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
@@ -332,36 +315,34 @@ export class editPolyGonFunC {
     // 监听鼠标移动事件
     handlerMouseMove = () => {
         this.handler.setInputAction((event: any) => {
-            if (isDrawLine && !isDrawPolyGon) {
+            if (isDrawLine && pointArr.length > 0) {
                 // 绘制逻辑
-                // 获取坐标信息
-                let movePosition = this.getLonOrLat(event.startPosition)
-                // 删除上一次生成
+                // 鼠标当前位置的cartesain3坐标
+                let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.startPosition);
+                // 删除上一次生成线
                 this.delDemoEntity('line_demo_name')
                 // 创建线
-                const demoLine = this.drawLine('line_demo_name', [...nowPoint, ...[movePosition.longitude, movePosition.latitude, 0]])
+                const demoLine = this.drawLine('line_demo_name', [nowPoint, cartesain3])
                 // 保存移动线的实体
                 pointAndLineEntity.demoLineEntityArr.push(demoLine)
             } else if (isDrawPolyGon && !isDrawLine) {
                 // 编辑逻辑
                 // 通过id查询当前选中的实体
                 const box = this.viewer.entities.getById(polygonId);
-                // 获取坐标信息
-                let movePosition = this.getLonOrLat(event.startPosition)
+                // 鼠标当前位置的cartesain3坐标
+                let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.startPosition);
                 // 更新点坐标
-                nowEditPoint[0].id.position = Cesium.Cartesian3.fromDegrees(movePosition.longitude, movePosition.latitude, 0)
+                nowEditPoint[0].id.position = cartesain3
                 // 获取更新面坐标的数据
                 let points: any = [];
                 pointAndLineEntity.pointEntityArr.forEach((item: any) => {
                     points.push(item.position._value);
                 })
                 // 更新面坐标
-                box.polygon.hierarchy = points;
-                // box.polygon.hierarchy = new Cesium.CallbackProperty(() => {
-                //     return points;
-                // }, false);
+                box.polygon.hierarchy = new Cesium.CallbackProperty(() => {
+                    return new Cesium.PolygonHierarchy(points);
+                }, false);
             }
-
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
     }
     // 监听鼠标右键点击事件

@@ -54,7 +54,7 @@ const cesiumContainer = ref()
 const viewer = ref()
 // 初始化地图
 const initMap = async () => {
-    viewer.value = new Cesium.Viewer('cesiumContainer', {
+    viewer.value = new Cesium.Viewer('cesiumContainer', {   
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
@@ -115,7 +115,7 @@ onMounted(async () => {
     editPolygon.handlerLeftClick()
     editPolygon.handlerMouseMove()
     editPolygon.handerRightClick()
-    const imageLayers = viewer.value.imageryLayers
+    // const imageLayers = viewer.value.imageryLayers
     // imageLayers.remove(imageLayers.get(0))
     // // 高德
     // var gaodeImageryProvider = new Cesium.UrlTemplateImageryProvider({
