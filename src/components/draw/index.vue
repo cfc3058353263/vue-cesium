@@ -15,8 +15,12 @@
                     <el-input v-model="form.name" autocomplete="off" @change="handleChangeName" />
                 </el-form-item>
                 <el-form-item label="实体高度" prop="height">
-                    <el-input-number v-model="form.height" :min="0" :max="1000" @change="handleChangeHeight" />
+                    <el-input-number v-model="form.height" :min="0" :max="1000" size="small" controls-position="right"
+                        @change="handleChangeHeight" /> 米
                 </el-form-item>
+                <!-- <el-form-item label="离地高度" prop="height">
+                    <el-input-number v-model="form.height" :min="0" :max="1000"  size="small" controls-position="right" @change="handleChangeHeight" /> 米
+                </el-form-item> -->
                 <el-form-item label="是否隐藏" prop="show">
                     <el-switch v-model="form.show" @change="handleChangeShow" />
                 </el-form-item>
@@ -35,7 +39,10 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref, reactive, toRefs } from "vue";
-import { editPolyGonFunC, drawer, form } from './component/draw.ts';
+import { editPolyGonFunC, drawer, form } from './component/draw/drawPolyGon.ts';
+import { edit3dTilesetFunC } from './component/model/set3dTileset.ts';
+import cache from '../../plugins/cache.ts'
+const { local } = cache
 
 const data = reactive({
     activeName: 'first',// 标签状态
@@ -54,7 +61,7 @@ const cesiumContainer = ref()
 const viewer = ref()
 // 初始化地图
 const initMap = async () => {
-    viewer.value = new Cesium.Viewer('cesiumContainer', {   
+    viewer.value = new Cesium.Viewer('cesiumContainer', {
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
@@ -68,7 +75,6 @@ const initMap = async () => {
     });
     // 相机飞入点
     viewer.value.camera.setView({
-        // destination: Cesium.Cartesian3.fromDegrees(119.76426786809103, 36.142744517915986, 2000),
         destination: Cesium.Cartesian3.fromDegrees(-73.97198, 40.77610, 2000),
         orientation: {
             // 指向
@@ -82,6 +88,8 @@ const initMap = async () => {
 
 // editPolygon实例
 let editPolygon: any
+// edit3dTileset实例
+let edit3dTileset: any
 // 绘制多边形
 const drawPolygon = () => {
     editPolygon.draw()
@@ -115,34 +123,12 @@ onMounted(async () => {
     editPolygon.handlerLeftClick()
     editPolygon.handlerMouseMove()
     editPolygon.handerRightClick()
-    // const imageLayers = viewer.value.imageryLayers
-    // imageLayers.remove(imageLayers.get(0))
-    // // 高德
-    // var gaodeImageryProvider = new Cesium.UrlTemplateImageryProvider({
-    //     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-    //     maximumLevel: 18,
-    //     minimumLevel: 1,
-    //     credit: 'Amap'
-    // })
-    // imageLayers.addImageryProvider(gaodeImageryProvider);
-    // 腾讯
-    // var tencentImageryProvider = new Cesium.UrlTemplateImageryProvider({
-    //     url: "https://p2.map.gtimg.com/sateTiles/{z}/{sx}/{sy}/{x}_{reverseY}.jpg?version=400",
-    //     customTags: {
-    //         sx: function (imageryProvider, x, y, level) { return x >> 4; },
-    //         sy: function (imageryProvider, x, y, level) { return ((1 << level) - y) >> 4 }
-    //     }
-    // });
-    // imageLayers.addImageryProvider(tencentImageryProvider);
-    // 天地图
-    // var tdtImageryProvider = new Cesium.UrlTemplateImageryProvider({
-    //     url: 'http://{s}.tianditu.com/DataServer?T=img_w&X={x}&Y={y}&L={z}&tk=7047525cefc9357438b08f9175efaa6b',
-    //     subdomains: ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7'],
-    //     maximumLevel: 18,
-    //     minimumLevel: 1,
-    //     credit: 'Tianditu'
-    // });
-    // imageLayers.addImageryProvider(tdtImageryProvider);
+    const data = JSON.parse(local.getJSON('polygon'))
+    editPolygon.drawDatapolygon(data)
+    // 创建edit3dTileset
+    edit3dTileset = new edit3dTilesetFunC(viewer.value, handle)
+    const tileset = await edit3dTileset.add3dTileset('http://127.0.0.1:8888/offset_3dtiles/tileset.json')
+    await edit3dTileset.changeHeight(70, tileset)
 
 });
 

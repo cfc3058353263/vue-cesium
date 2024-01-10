@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 import { reactive, toRefs } from "vue";
-import cache from '../../../plugins/cache.ts'
+import cache from '../../../../plugins/cache.ts'
 const { local } = cache
 const data = reactive({
     drawer: false, // 抽屉
@@ -9,7 +9,7 @@ const data = reactive({
         name: '',
         show: true,
         height: 0,
-        color: '#ffffff80',
+        color: '#ffffff80'
     }
 })
 export const { drawer, form } = toRefs(data)
@@ -161,8 +161,6 @@ export class editPolyGonFunC {
      * @param lonAndLat 经纬度集合
      */
     drawPolyhedron = () => {
-        // console.log(this.viewer.entities.getById(polygonId).polygon.hierarchy._callback())
-        // return
         // 获取当前点击的实体坐标
         const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._callback().positions;
         this.viewer.entities.removeById(polygonId);
@@ -181,7 +179,6 @@ export class editPolyGonFunC {
                 outline: true
             },
         });
-
     }
     /**
      * 修改颜色
@@ -208,15 +205,14 @@ export class editPolyGonFunC {
      * 保存
      */
     save = () => {
-        const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._value.positions;
-        positions.map(item => {
-            const lnglat = Cesium.Cartographic.fromCartesian(item)
-            console.log(lnglat)
-        })
-        var cartographics = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions)//一组坐标
-        console.log('cartographics', cartographics)
-        // const polygon = polygonList.find(item => item.id === form.id)
-        // console.log(JSON.parse(local.get('polygon')))
+        const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._callback().positions;
+        for (let index in polygonList) {
+            if (polygonList[index].id === polygonId) {
+                polygonList[index] = form.value
+                polygonList[index].data = positions
+            }
+        }
+        local.setJSON('polygon', JSON.stringify(polygonList))
     }
     /**
     * 开启绘制
@@ -227,6 +223,26 @@ export class editPolyGonFunC {
     /**
      * 加载现有的多边形
      */
+    drawDatapolygon = (data: any) => {
+        data.forEach((item: any) => {
+            polygonList.push(item)
+            this.viewer.entities.add({
+                id: item.id,
+                name: item.name,
+                polygon: {
+                    hierarchy: new Cesium.CallbackProperty(() => {
+                        return new Cesium.PolygonHierarchy(item.data);
+                    }, false),
+                    extrudedHeight: item.height, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
+                    height: 0, // 是指polygon距离地面的高度
+                    material: Cesium.Color.fromCssColorString(item.color),
+                    outlineColor: Cesium.Color.RED,
+                    outlineWidth: 2,
+                    outline: true
+                },
+            });
+        })
+    }
     // 重置
     klk = () => {
         this.delDemoEntity('point_name')

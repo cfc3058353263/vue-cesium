@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.23.6.tgz#ba1c9e512bda72a47e285ae42aff9d2a635a9e3b"
   integrity sha512-Z2uID7YJ7oNvAI20O9X0bblw7Qqs8Q2hFy0R9tAfnfLkp5MW0UH9eUvnDSnFwKZ0AvgS1ucqR4KzvVHgnke1VQ==
 
-"@cesium/engine@^6.1.1":
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/@cesium/engine/-/engine-6.1.1.tgz#eeef7f68b4924ed658996090fccabcae7fa71f73"
-  integrity sha512-PY8A742SR5rHagjaDCG7G6LWYeMXdyBJOoTkkaaLGh4XYBCdan/aygPO0CTTq26hAyjf9Ugi7HCoRe0ruNvgGg==
+"@cesium/engine@^6.2.0":
+  version "6.2.0"
+  resolved "https://registry.npmmirror.com/@cesium/engine/-/engine-6.2.0.tgz#d0ef9af567f73e30f279f592423f2833c438eacc"
+  integrity sha512-9Iv0JFsCp7wGi7ZzP88WlkBMfOjA49obFJ4I+p2gNIGSmKZRPdstzEqUWjyJDZeck3sZaLfYUsyRDmDCgOIaBw==
   dependencies:
     "@tweenjs/tween.js" "^21.0.0"
     "@zip.js/zip.js" "2.4.x"
@@ -32,12 +32,12 @@
     topojson-client "^3.1.0"
     urijs "^1.19.7"
 
-"@cesium/widgets@^4.3.1":
-  version "4.3.1"
-  resolved "https://registry.yarnpkg.com/@cesium/widgets/-/widgets-4.3.1.tgz#80955e993d951d7b712a6619dad4bee6b63e1a9c"
-  integrity sha512-uT2cCd6D2JOxtDsvh0VzbrlKOvAJROacDPq2OXE7muHWx/FkXXL0Q6+ZWGbMuCdv/KsiMJpRUiU9jJDX9AS01A==
+"@cesium/widgets@^4.4.0":
+  version "4.4.0"
+  resolved "https://registry.npmmirror.com/@cesium/widgets/-/widgets-4.4.0.tgz#573d9d7e834053b33f386f09811e26e15402c829"
+  integrity sha512-K3kGy9rQAc1HVhPy4YE0ZIYK2RoQ9USpYh2l6NqtqFYXQy7buyctPjPC8aOvqX2+3Nn91+AOOyD1DHmkezR9BA==
   dependencies:
-    "@cesium/engine" "^6.1.1"
+    "@cesium/engine" "^6.2.0"
     nosleep.js "^0.12.0"
 
 "@ctrl/tinycolor@^3.4.1":
@@ -323,7 +323,7 @@
 
 "@tweenjs/tween.js@^21.0.0":
   version "21.0.0"
-  resolved "https://registry.yarnpkg.com/@tweenjs/tween.js/-/tween.js-21.0.0.tgz#73f993c2d1de37b78b4c1246163e20bc6ae3b75e"
+  resolved "https://registry.npmmirror.com/@tweenjs/tween.js/-/tween.js-21.0.0.tgz#73f993c2d1de37b78b4c1246163e20bc6ae3b75e"
   integrity sha512-qVfOiFh0U8ZSkLgA6tf7kj2MciqRbSCWaJZRwftVO7UbtVDNsZAXpWXqvCDtIefvjC83UJB+vHTDOGm5ibXjEA==
 
 "@types/estree@*":
@@ -344,9 +344,9 @@
   integrity sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ==
 
 "@types/node@>=13.7.0":
-  version "20.10.6"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.10.6.tgz#a3ec84c22965802bf763da55b2394424f22bfbb5"
-  integrity sha512-Vac8H+NlRNNlAmDfGUP7b5h/KA+AtWIzuXy0E6OyP8f1tCLYAtPvKRRDJjAPqhpCb0t6U2j7/xqAuLEebW2kiw==
+  version "20.10.7"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.10.7.tgz#40fe8faf25418a75de9fe68a8775546732a3a901"
+  integrity sha512-fRbIKb8C/Y2lXxB5eVMj4IU7xpdox0Lh8bUPEdtLysaylsml1hOOx1+STloRs/B9nf7C6kPRmmg/V7aQW7usNg==
   dependencies:
     undici-types "~5.26.4"
 
@@ -571,13 +571,13 @@ braces@~3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
-cesium@^1.112.0:
-  version "1.112.0"
-  resolved "https://registry.yarnpkg.com/cesium/-/cesium-1.112.0.tgz#b5798d993e7e4c662ab7fd375087aeee54270db1"
-  integrity sha512-johaLB97GIBZF9qEfKHc04vQHgh3B0tikFE+QA5W+ZsL97KQjTcdlgwGNxCT2yMCgN5hZ+eSynoQhkqLdFuUDA==
+cesium@^1.113.0:
+  version "1.113.0"
+  resolved "https://registry.npmmirror.com/cesium/-/cesium-1.113.0.tgz#5a3a5a2806c8f73fb822d2e982b70f246fb18d4c"
+  integrity sha512-OtbeMGXZn2dlNVYWCeq0JeGjgFPikXp6aTjo/azzuvOTj3JwgVie0tgNUGVlYDVi+fMPQqttC14lJbPYRL7etw==
   dependencies:
-    "@cesium/engine" "^6.1.1"
-    "@cesium/widgets" "^4.3.1"
+    "@cesium/engine" "^6.2.0"
+    "@cesium/widgets" "^4.4.0"
 
 "chokidar@>=3.0.0 <4.0.0":
   version "3.5.3"
@@ -649,13 +649,13 @@ destroy@1.2.0:
   integrity sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==
 
 dompurify@^3.0.2:
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.0.6.tgz#925ebd576d54a9531b5d76f0a5bef32548351dae"
-  integrity sha512-ilkD8YEnnGh1zJ240uJsW7AzE+2qpbOUYjacomn3AvJ6J4JhKGSZ2nh4wUIXPZrEPppaCLx5jFe8T89Rk8tQ7w==
+  version "3.0.8"
+  resolved "https://registry.npmmirror.com/dompurify/-/dompurify-3.0.8.tgz#e0021ab1b09184bc8af7e35c7dd9063f43a8a437"
+  integrity sha512-b7uwreMYL2eZhrSCRC4ahLTeZcPZxSmYfmcQGXGkXiZSNW1X85v+SDM5KsWcpivIiUBH47Ji7NtyUdpLeF5JZQ==
 
 draco3d@^1.5.1:
   version "1.5.6"
-  resolved "https://registry.yarnpkg.com/draco3d/-/draco3d-1.5.6.tgz#0d570a9792e3a3a9fafbfea065b692940441c626"
+  resolved "https://registry.npmmirror.com/draco3d/-/draco3d-1.5.6.tgz#0d570a9792e3a3a9fafbfea065b692940441c626"
   integrity sha512-+3NaRjWktb5r61ZFoDejlykPEFKT5N/LkbXsaddlw6xNSXBanUYpFc2AXXpbJDilPHazcSreU/DpQIaxfX0NfQ==
 
 earcut@^2.2.4:
@@ -874,12 +874,12 @@ jsonfile@^6.0.1:
 
 kdbush@^4.0.1:
   version "4.0.2"
-  resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-4.0.2.tgz#2f7b7246328b4657dd122b6c7f025fbc2c868e39"
+  resolved "https://registry.npmmirror.com/kdbush/-/kdbush-4.0.2.tgz#2f7b7246328b4657dd122b6c7f025fbc2c868e39"
   integrity sha512-WbCVYJ27Sz8zi9Q7Q0xHC+05iwkm3Znipc2XTlrnJbsHMYktW4hPhXUE8Ys1engBrvffoSCqbil1JQAa7clRpA==
 
 ktx-parse@^0.6.0:
   version "0.6.0"
-  resolved "https://registry.yarnpkg.com/ktx-parse/-/ktx-parse-0.6.0.tgz#69e12a511cf345546da27b5b046182f5f31f68f9"
+  resolved "https://registry.npmmirror.com/ktx-parse/-/ktx-parse-0.6.0.tgz#69e12a511cf345546da27b5b046182f5f31f68f9"
   integrity sha512-hYOJUI86N9+YPm0M3t8hVzW9t5FnFFibRalZCrqHs/qM2eNziqQzBtAaF0ErgkXm8F+5uE8CjPUYr32vWlXLkQ==
 
 lerc@^2.0.0:
@@ -940,7 +940,7 @@ mersenne-twister@^1.1.0:
 
 meshoptimizer@^0.20.0:
   version "0.20.0"
-  resolved "https://registry.yarnpkg.com/meshoptimizer/-/meshoptimizer-0.20.0.tgz#890eaeafa2b5730a0c58770fdf3b1fe77b746bf5"
+  resolved "https://registry.npmmirror.com/meshoptimizer/-/meshoptimizer-0.20.0.tgz#890eaeafa2b5730a0c58770fdf3b1fe77b746bf5"
   integrity sha512-olcJ1q+YVnjroRJpCL1Dj5aZxr2JMr2hRutMUwhuHZvpAL7SIZgOT6eMlFF4TbBGSR89tawE/gqB79J/LrW/Nw==
 
 mime-db@1.52.0:
