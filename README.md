@@ -85,6 +85,7 @@
 5. 圆形/椭圆
 6. 不同级别显示不同分辨率的图层
 
+
 ### 高德等其他影像图的添加方式
 ```js
 const imageLayers = viewer.value.imageryLayers
@@ -131,6 +132,81 @@ viewer.zoomTo(tileset)
 // 参数配置详细地址 https://blog.csdn.net/weixin_51527962/article/details/122392166
 ```
 
+
+### 倾斜摄影单体化
+```js
+// 单体化简单点说就是在模型上贴一层膜，然后在点击的时候让膜显示，并展示数据。
+// 实例出一些透明的立方体或其他几何体，通过调位置大小，覆盖在你想单体化的楼栋上面，再通过ClassificationPrimitive反选倾斜摄影赋予颜色。 https://www.vvpstk.com/public/Cesium/Documentation/ClassificationPrimitive.html?classFilter=ClassificationPrimitive
+// 在单体化的时候一般是用BoxGeometry实现的 例如
+var tilesModelObj = scene.primitives.add(new Cesium.ClassificationPrimitive({
+    geometryInstances : Cesium.BoxGeometry.fromDimensions({
+        geometry : new Cesium.EllipsoidGeometry({
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            // 第一个参数是遮罩的整体横向长度，第二个参数是竖向长度，第三个参数是整体高度
+            dimensions: new Cesium.Cartesian3(Number(65), Number(50), Number(160))
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                Cesium.Color.fromCssColorString('#F26419').withAlpha(0.5)
+            ),
+            show : new Cesium.ShowGeometryInstanceAttribute(true)
+        },
+        id : 'volume 1'
+    }),
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+}));
+// 你也可以使用其他的几何图形 这里使用的是PolygonGeometry
+const positions = [
+    {
+        "x": -2306878.671540245,
+        "y": 5418723.165773451,
+        "z": 2440540.8378102113
+    },
+    {
+        "x": -2306871.3570130244,
+        "y": 5418740.242750738,
+        "z": 2440510.0430691787
+    },
+    {
+        "x": -2306938.396439779,
+        "y": 5418715.395939039,
+        "z": 2440501.896611101
+    },
+    {
+        "x": -2306934.13796275,
+        "y": 5418705.8433269,
+        "z": 2440526.962879609
+    }
+]
+ const tilesModelObj = scene.primitives.add(
+    new Cesium.ClassificationPrimitive({
+        geometryInstances: new Cesium.GeometryInstance({
+            geometry: new Cesium.PolygonGeometry({
+                polygonHierarchy: new Cesium.PolygonHierarchy(
+                    positions
+                ),
+                extrudedHeight: 1000,//分层顶部海拔
+                height: 0,//分层底部海拔
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                    Cesium.Color.fromCssColorString('#F26419').withAlpha(0.5)
+                ),
+                show: new Cesium.ShowGeometryInstanceAttribute(true)
+            },
+            id: 'volume 1'
+        }),
+        classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+    })
+)
+// 参考资料
+// https://www.vvpstk.com/public/Cesium/Documentation/ClassificationPrimitive.html?classFilter=ClassificationPrimitive
+// https://blog.csdn.net/qq_40863573/article/details/125890281?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-125890281-blog-84851824.235^v40^pc_relevant_3m_sort_dl_base3&spm=1001.2101.3001.4242.2&utm_relevant_index=4
+// https://blog.csdn.net/weixin_48549175/article/details/127852100?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2-127852100-blog-125890281.235%5Ev40%5Epc_relevant_3m_sort_dl_base3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2-127852100-blog-125890281.235%5Ev40%5Epc_relevant_3m_sort_dl_base3&utm_relevant_index=5
+```
+
+
 ### 多边形绘制
 ```js
 viewer.entities.add({
@@ -155,4 +231,19 @@ viewer.entities.add({
         outline: true
     },
 })
+```
+
+### 圆形绘制
+
+## 关于点击事件的问题
+通常来说最好只有一个监听的点击事件，当你要切换事件监听时，务必将之前的事件监听停掉，保证一次点击只在一个事件监听中
+
+### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
+```js
+运行
+yarn config set ignore-engines true 
+```
+
+### 关于倾斜摄影悬空的问题
+```js
 ```

@@ -143,7 +143,8 @@ export class editPolyGonFunC {
                     return new Cesium.PolygonHierarchy(lonAndLat);
                 }, false),
                 material: Cesium.Color.fromCssColorString('#ffffff80'),
-                extrudedHeight: 0
+                extrudedHeight: 30,
+                height: 0
             }
         });
         polygonList.push({
@@ -225,22 +226,24 @@ export class editPolyGonFunC {
      */
     drawDatapolygon = (data: any) => {
         data.forEach((item: any) => {
-            polygonList.push(item)
-            this.viewer.entities.add({
-                id: item.id,
-                name: item.name,
-                polygon: {
-                    hierarchy: new Cesium.CallbackProperty(() => {
-                        return new Cesium.PolygonHierarchy(item.data);
-                    }, false),
-                    extrudedHeight: item.height, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
-                    height: 0, // 是指polygon距离地面的高度
-                    material: Cesium.Color.fromCssColorString(item.color),
-                    outlineColor: Cesium.Color.RED,
-                    outlineWidth: 2,
-                    outline: true
-                },
-            });
+            if(item.show){
+                polygonList.push(item)
+                this.viewer.entities.add({
+                    id: item.id,
+                    name: item.name,
+                    polygon: {
+                        hierarchy: new Cesium.CallbackProperty(() => {
+                            return new Cesium.PolygonHierarchy(item.data);
+                        }, false),
+                        extrudedHeight: item.height, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
+                        height: 0, // 是指polygon距离地面的高度
+                        material: Cesium.Color.fromCssColorString(item.color),
+                        outlineColor: Cesium.Color.RED,
+                        outlineWidth: 2,
+                        outline: true
+                    },
+                });
+            }
         })
     }
     // 重置

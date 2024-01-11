@@ -7,33 +7,77 @@ export class edit3dTilesetFunC {
         this.viewer = viewer;
         this.handler = handler
     }
+    /**
+     * 添加3dtileset
+     * @param url 
+     * @returns 
+     */
     add3dTileset = async (url: string) => {
+        let translation = Cesium.Cartesian3.fromArray([0, 0, -170])
+        let m = Cesium.Matrix4.fromTranslation(translation)
         const tileset = await Cesium.Cesium3DTileset.fromUrl(
             // 3dtileset模型位置地址
             url,
             {
-                maximumMemoryUsage: 100,//不可设置太高，目标机子空闲内存值以内，防止浏览器过于卡
+                modelMatrix: m,
                 maximumScreenSpaceError: 32,//用于驱动细节细化级别的最大屏幕空间错误;较高的值可提供更好的性能，但视觉质量较低。
-                maximumNumberOfLoadedTiles: 1000,  //最大加载瓦片个数
-                shadows: false,//是否显示阴影
-                skipLevelOfDetail: true,// 确定是否应在遍历期间应用详细级别跳过(默认false)
-                baseScreenSpaceError: 1024,//When skipLevelOfDetailis true，在跳过详细级别之前必须达到的屏幕空间错误(默认1024)
-                skipScreenSpaceErrorFactor: 16,// 定义要跳过的最小屏幕空间错误的乘数。与 一起使用skipLevels来确定要加载哪些图块(默认16)
-                skipLevels: 1,//skipLevelOfDetail是true 一个常量，定义了加载图块时要跳过的最小级别数。为 0 时，不跳过任何级别。与 一起使用skipScreenSpaceErrorFactor来确定要加载哪些图块。(默认1)
-                immediatelyLoadDesiredLevelOfDetail: false,//当skipLevelOfDetail是时true，只会下载满足最大屏幕空间错误的图块。忽略跳过因素，只加载所需的图块(默认false)
-                loadSiblings: false,// 如果为true则不会在已加载完概况房屋后，自动从中心开始超清化房屋 --- 何时确定在遍历期间skipLevelOfDetail是否true始终下载可见瓦片的兄弟姐妹(默认false)
-                cullWithChildrenBounds: true,//是否使用子边界体积的并集来剔除瓦片（默认true）
-                dynamicScreenSpaceError: true,//减少距离相机较远的图块的屏幕空间错误(默认false)
-                dynamicScreenSpaceErrorDensity: 0.00278,//数值加大，能让周边加载变快 --- 用于调整动态屏幕空间误差的密度，类似于雾密度(默认0.00278)
-                dynamicScreenSpaceErrorFactor: 4.0,// 用于增加计算的动态屏幕空间误差的因素(默认4.0)
-                dynamicScreenSpaceErrorHeightFalloff: 0.25//密度开始下降的瓦片集高度的比率(默认0.25)
             });
         this.viewer.scene.primitives.add(tileset);
         this.viewer.zoomTo(tileset)
         return tileset;
     }
+    /**
+     * 模型单体化
+     */
+    tilesModel = () => {
+        // const positions = this.viewer.entities.getById('5a0e1246-2d3d-4819-bb77-28ee2ba6b28d').polygon.hierarchy._callback().positions;
+        // console.log(positions)
+        const positions = [
+            {
+                "x": -2306878.671540245,
+                "y": 5418723.165773451,
+                "z": 2440540.8378102113
+            },
+            {
+                "x": -2306871.3570130244,
+                "y": 5418740.242750738,
+                "z": 2440510.0430691787
+            },
+            {
+                "x": -2306938.396439779,
+                "y": 5418715.395939039,
+                "z": 2440501.896611101
+            },
+            {
+                "x": -2306934.13796275,
+                "y": 5418705.8433269,
+                "z": 2440526.962879609
+            }
+        ]
+        const tilesModelObj = scene.primitives.add(
+            new Cesium.ClassificationPrimitive({
+                geometryInstances: new Cesium.GeometryInstance({
+                    geometry: new Cesium.PolygonGeometry({
+                        polygonHierarchy: new Cesium.PolygonHierarchy(
+                            positions
+                        ),
+                        extrudedHeight: 1000,//分层顶部海拔
+                        height: 0,//分层底部海拔
+                    }),
+                    attributes: {
+                        color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                            Cesium.Color.fromCssColorString('#F26419').withAlpha(0.5)
+                        ),
+                        show: new Cesium.ShowGeometryInstanceAttribute(true)
+                    },
+                    id: 'volume 1'
+                }),
+                classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+            })
+        )
+    }
     //如果模型没有贴地 调整高度,height表示物体离地面的高度
-    changeHeight = (height, tileset) => {
+    changeHeight = (height: number, tileset: any) => {
         height = Number(height);
         if (isNaN(height)) {
             return;
@@ -43,5 +87,14 @@ export class edit3dTilesetFunC {
         var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
         var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
         tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+    }
+    // 监听鼠标左击事件
+    handlerLeftClick = () => {
+        this.handler.setInputAction((event: any) => {
+            let pick = this.viewer.scene.pick(event.position)
+            if (Cesium.defined(pick) && pick) {
+                this.tilesModel()
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     }
 }

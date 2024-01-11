@@ -2,9 +2,9 @@
     <div ref="cesiumContainer" id="cesiumContainer">
         <div class="draw" type="card">
             <el-tabs v-model="activeName" class="demo-tabs">
-                <el-tab-pane label="点" name="first"></el-tab-pane>
-                <el-tab-pane label="线" name="second"></el-tab-pane>
-                <el-tab-pane label="面" name="third">
+                <el-tab-pane label="绘制点" name="first"></el-tab-pane>
+                <el-tab-pane label="绘制线" name="second"></el-tab-pane>
+                <el-tab-pane label="绘制面" name="third">
                     <el-button type="primary" size="small" @click="drawPolygon()">开始绘制</el-button>
                 </el-tab-pane>
             </el-tabs>
@@ -116,6 +116,7 @@ const handleSubmit = () => {
 }
 onMounted(async () => {
     initMap()
+    // viewer.value.scene.globe.depthTestAgainstTerrain = true;
     // 监听cesiumContainer的鼠标事件
     const handle = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
     // 创建editPolygon
@@ -123,13 +124,15 @@ onMounted(async () => {
     editPolygon.handlerLeftClick()
     editPolygon.handlerMouseMove()
     editPolygon.handerRightClick()
-    const data = JSON.parse(local.getJSON('polygon'))
-    editPolygon.drawDatapolygon(data)
+    if(local.getJSON('polygon')){
+        const data =  JSON.parse(local.getJSON('polygon'))
+        data && editPolygon.drawDatapolygon(data)
+    }
     // 创建edit3dTileset
     edit3dTileset = new edit3dTilesetFunC(viewer.value, handle)
-    const tileset = await edit3dTileset.add3dTileset('http://127.0.0.1:8888/offset_3dtiles/tileset.json')
-    await edit3dTileset.changeHeight(70, tileset)
-
+    const tileset = await edit3dTileset.add3dTileset('http://127.0.0.1:8888/b3dm/tileset.json')
+    // await edit3dTileset.changeHeight(34, tileset)
+    // edit3dTileset.handlerLeftClick()
 });
 
 </script>
