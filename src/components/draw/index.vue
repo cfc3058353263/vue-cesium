@@ -3,10 +3,14 @@
         <div class="draw" type="card">
             <el-tabs v-model="activeName" class="demo-tabs">
                 <el-tab-pane label="绘制标注" name="first">
-                    <el-button type="primary" size="small" @click="drawPoint()">开始绘制/结束绘制</el-button>
-                    <el-button type="primary" size="small" @click="drawPoint()">开始编辑/结束编辑</el-button>
+                    <el-button type="primary" size="small" @click="drawPoint()">开始绘制</el-button>
+                    <!-- <el-button type="primary" size="small" @click="drawPoint()">开始编辑/结束编辑</el-button> -->
                 </el-tab-pane>
-                <el-tab-pane label="绘制线" name="second"></el-tab-pane>
+                <el-tab-pane label="绘制线" name="second">
+                    <el-button type="primary" size="small" @click="drawLine()">开始绘制</el-button>
+                    <el-button type="primary" size="small" @click="editLineList()">开启编辑</el-button>
+                    <el-button type="primary" size="small" @click="endLine()">结束编辑</el-button>
+                </el-tab-pane>
                 <el-tab-pane label="绘制多边形" name="third">
                     <el-button type="primary" size="small" @click="drawPolygon()">开始绘制</el-button>
                 </el-tab-pane>
@@ -35,7 +39,7 @@
                     <el-button @click="">重置</el-button>
                 </el-form-item>
             </el-form> -->
-            
+
         </el-drawer>
     </div>
 </template>
@@ -44,6 +48,8 @@
 import * as Cesium from "cesium";
 import { onMounted, ref, reactive, toRefs } from "vue";
 import { editPolyGonFunC } from './component/draw/drawPolyGon.ts';
+import { editLineFunC } from './component/draw/drawLine.ts';
+import kmlGeoJSon from './component/kml/kmlGeoJSon.ts';
 import { editPointFunC } from './component/draw/drawPoint.ts';
 import { edit3dTilesetFunC } from './component/model/set3dTileset.ts';
 import cache from '../../plugins/cache.ts'
@@ -90,14 +96,31 @@ let editPolygon: any
 // edit3dTileset实例
 let edit3dTileset: any
 // 绘制点
-let editPoint:any
-const drawPoint = () =>{
+let editPoint: any
+// 绘制线
+let editLine: any
+
+const drawPoint = () => {
     editPoint.draw()
 }
-// // 绘制多边形
-// const drawPolygon = () => {
-//     editPolygon.draw()
-// }
+
+// 绘制线
+const drawLine = () => {
+    editLine.draw()
+}
+// 编辑线
+const editLineList = () => {
+    editLine.edit()
+}
+// 编辑线
+const endLine = () => {
+    editLine.endEdit()
+}
+// 绘制多边形
+const drawPolygon = () => {
+    editPolygon.draw()
+}
+
 // // 修改名称
 // const handleChangeName = () => {
 //     editPolygon.setName()
@@ -121,27 +144,34 @@ const drawPoint = () =>{
 onMounted(async () => {
     initMap()
     // 如果给定的模型高度是高于地面的，则可以关闭地形
-    viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    // viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
     // 开启地形深度检测
-    viewer.value.scene.globe.depthTestAgainstTerrain = true;
+    // viewer.value.scene.globe.depthTestAgainstTerrain = true;
     // 监听cesiumContainer的鼠标事件
     const handle = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
     // 创建editPoint
-    editPoint = new editPointFunC(viewer.value, handle)
+    // editPoint = new editPointFunC(viewer.value, handle)
+    // 创建editLineFunC
+    editLine = new editLineFunC(viewer.value, handle)
+
     // 创建editPolygon
-    editPolygon = new editPolyGonFunC(viewer.value, handle)
-    editPolygon.handlerLeftClick()
-    editPolygon.handlerMouseMove()
-    editPolygon.handerRightClick()
-    if(local.getJSON('polygon')){
-        const data =  JSON.parse(local.getJSON('polygon'))
-        data && editPolygon.drawDatapolygon(data)
-    }
+    // editPolygon = new editPolyGonFunC(viewer.value, handle)
+    // editPolygon.handlerLeftClick()
+    // editPolygon.handlerMouseMove()
+    // editPolygon.handerRightClick()
+    // if(local.getJSON('polygon')){
+    //     const data =  JSON.parse(local.getJSON('polygon'))
+    //     data && editPolygon.drawDatapolygon(data)
+    // }
     // 创建edit3dTileset
-    edit3dTileset = new edit3dTilesetFunC(viewer.value, handle)
-    const tileset = await edit3dTileset.add3dTileset('http://139.129.23.185:8080/download/3dtiles/slytScene/Production.json')
+    // edit3dTileset = new edit3dTilesetFunC(viewer.value, handle)
+    // const tileset = await edit3dTileset.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
     // await edit3dTileset.changeHeight(34, tileset)
     // edit3dTileset.handlerLeftClick()
+
+    const kml = new kmlGeoJSon(viewer.value, handle)
+    // kml.geoJsonDataSource()
+    kml.KmlDataSource()
 });
 
 </script>

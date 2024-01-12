@@ -235,6 +235,14 @@ viewer.entities.add({
 
 ### 圆形绘制
 
+### dataSource
+```js
+// DataSource是用于表示和呈现地理空间数据的类。DataSource包含了一组实体(Entity)对象，每个实体都包含了地理位置、几何形状、材质、文本标注等属性，用于在Cesium Viewer中呈现地理空间数据。
+```
+
+
+
+
 ## 关于点击事件的问题
 通常来说最好只有一个监听的点击事件，当你要切换事件监听时，务必将之前的事件监听停掉，保证一次点击只在一个事件监听中
 
@@ -287,3 +295,4 @@ var longitude = Cesium.Math.toDegrees(cartographic.longitude);
 var latitude = Cesium.Math.toDegrees(cartographic.latitude);
 var height = cartographic.height;
 ```
+

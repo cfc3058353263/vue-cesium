@@ -54,15 +54,15 @@ export class edit3dTilesetFunC {
                 "z": 2440526.962879609
             }
         ]
-        const tilesModelObj = scene.primitives.add(
+        const tilesModelObj = this.viewer.scene.primitives.add(
             new Cesium.ClassificationPrimitive({
                 geometryInstances: new Cesium.GeometryInstance({
                     geometry: new Cesium.PolygonGeometry({
                         polygonHierarchy: new Cesium.PolygonHierarchy(
                             positions
                         ),
-                        extrudedHeight: 1000,//分层顶部海拔
-                        height: 0,//分层底部海拔
+                        extrudedHeight: 100,//分层顶部海拔
+                        height: 50,//分层底部海拔
                     }),
                     attributes: {
                         color: Cesium.ColorGeometryInstanceAttribute.fromColor(

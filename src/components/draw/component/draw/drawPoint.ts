@@ -59,9 +59,11 @@ export class editPointFunC {
         var height = cartographic.height;
         const entityPoint = this.viewer.entities.add({
             name: '',
+            // 10 是用来设置广告牌的距离地面的高度
             position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 10),
             billboard: {
                 image: icon1,//图标地址
+                // 位置固定不会因为旋转视角发生偏移
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 // 设置距离控制可见度
                 distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2100),
@@ -82,6 +84,13 @@ export class editPointFunC {
         this.isDrawPoint = false
         return entityPoint
     }
+    /**
+     * 绘制弹框
+     */
+    drawmessageBox = () => {
+        return 
+     }
+
     /**
      * 添加弹框
      */
@@ -105,7 +114,7 @@ export class editPointFunC {
         this.viewer.cesiumWidget.container.appendChild(div);
         console.log(div)
         this.viewer.scene.postRender.addEventListener(() => {
-            const gisPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude);
+            const gisPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 10);
             const canvasHeight = this.viewer.scene.canvas.height;
             const windowPosition = new Cesium.Cartesian2();
             Cesium.SceneTransforms.wgs84ToWindowCoordinates(this.viewer.scene, gisPosition, windowPosition);
@@ -161,8 +170,7 @@ export class editPointFunC {
             // 判断是否获取到了 pick 
             if (Cesium.defined(pick)) {
                 if (pick.id instanceof Cesium.Entity && pick.id.type === 'billboard') {
-                    console.log(pick.id)
-                    let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.position);
+                    let cartesain3 = pick.id.position._value
                     this.addmessageBox(cartesain3)
                 }
             } else if (this.isDrawPoint) {
