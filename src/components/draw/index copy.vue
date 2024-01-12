@@ -2,9 +2,8 @@
     <div ref="cesiumContainer" id="cesiumContainer">
         <div class="draw" type="card">
             <el-tabs v-model="activeName" class="demo-tabs">
-                <el-tab-pane label="绘制标注" name="first">
-                    <el-button type="primary" size="small" @click="drawPoint()">开始绘制/结束绘制</el-button>
-                    <el-button type="primary" size="small" @click="drawPoint()">开始编辑/结束编辑</el-button>
+                <el-tab-pane label="绘制点" name="first">
+                    <el-button type="primary" size="small" @click="drawPoint()">开始绘制</el-button>
                 </el-tab-pane>
                 <el-tab-pane label="绘制线" name="second"></el-tab-pane>
                 <el-tab-pane label="绘制多边形" name="third">
@@ -13,7 +12,10 @@
             </el-tabs>
         </div>
         <el-drawer v-model="drawer" title="I am the title" :with-header="false" :modal="false" modal-class="drawerModal">
-            <!-- <el-form ref="ruleFormRef" :model="form" status-icon label-width="120px" class="demo-ruleForm">
+            <el-form ref="">
+
+            </el-form>
+            <!-- <el-form ref="ruleFormRef" :model="form" status-icon :rules="rules" label-width="120px" class="demo-ruleForm">
                 <el-form-item label="实体名称" prop="name">
                     <el-input v-model="form.name" autocomplete="off" @change="handleChangeName" />
                 </el-form-item>
@@ -43,7 +45,7 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref, reactive, toRefs } from "vue";
-import { editPolyGonFunC } from './component/draw/drawPolyGon.ts';
+import { editPolyGonFunC, drawer, form } from './component/draw/drawPolyGon.ts';
 import { editPointFunC } from './component/draw/drawPoint.ts';
 import { edit3dTilesetFunC } from './component/model/set3dTileset.ts';
 import cache from '../../plugins/cache.ts'
@@ -53,6 +55,12 @@ const data = reactive({
     activeName: 'first',// 标签状态
 })
 const { activeName } = toRefs(data)
+
+const rules = reactive({
+    name: [{ required: true, message: '请输入实体名称', trigger: 'blur' },],
+    // checkPass: [{ validator: validatePass2, trigger: 'blur' }],
+    // age: [{ validator: checkAge, trigger: 'blur' }],
+})
 
 // 当前组件的实例
 const cesiumContainer = ref()
@@ -84,7 +92,7 @@ const initMap = async () => {
         },
     });
 };
-const drawer = ref()
+
 // editPolygon实例
 let editPolygon: any
 // edit3dTileset实例
@@ -94,36 +102,33 @@ let editPoint:any
 const drawPoint = () =>{
     editPoint.draw()
 }
-// // 绘制多边形
-// const drawPolygon = () => {
-//     editPolygon.draw()
-// }
-// // 修改名称
-// const handleChangeName = () => {
-//     editPolygon.setName()
-// }
-// // 修改高度
-// const handleChangeHeight = () => {
-//     editPolygon.drawPolyhedron()
-// }
-// //  修改颜色
-// const handleChangeColor = () => {
-//     editPolygon.setColor()
-// }
-// // 显示隐藏
-// const handleChangeShow = () => {
-//     editPolygon.setShow()
-// }
-// // 保存
-// const handleSubmit = () => {
-//     editPolygon.save()
-// }
+// 绘制多边形
+const drawPolygon = () => {
+    editPolygon.draw()
+}
+// 修改名称
+const handleChangeName = () => {
+    editPolygon.setName()
+}
+// 修改高度
+const handleChangeHeight = () => {
+    editPolygon.drawPolyhedron()
+}
+//  修改颜色
+const handleChangeColor = () => {
+    editPolygon.setColor()
+}
+// 显示隐藏
+const handleChangeShow = () => {
+    editPolygon.setShow()
+}
+// 保存
+const handleSubmit = () => {
+    editPolygon.save()
+}
 onMounted(async () => {
     initMap()
-    // 如果给定的模型高度是高于地面的，则可以关闭地形
-    viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-    // 开启地形深度检测
-    viewer.value.scene.globe.depthTestAgainstTerrain = true;
+    // viewer.value.scene.globe.depthTestAgainstTerrain = true;
     // 监听cesiumContainer的鼠标事件
     const handle = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
     // 创建editPoint
@@ -138,8 +143,8 @@ onMounted(async () => {
         data && editPolygon.drawDatapolygon(data)
     }
     // 创建edit3dTileset
-    edit3dTileset = new edit3dTilesetFunC(viewer.value, handle)
-    const tileset = await edit3dTileset.add3dTileset('http://139.129.23.185:8080/download/3dtiles/slytScene/Production.json')
+    // edit3dTileset = new edit3dTilesetFunC(viewer.value, handle)
+    // const tileset = await edit3dTileset.add3dTileset('http://127.0.0.1:8888/b3dm/tileset.json')
     // await edit3dTileset.changeHeight(34, tileset)
     // edit3dTileset.handlerLeftClick()
 });

@@ -244,6 +244,46 @@ viewer.entities.add({
 yarn config set ignore-engines true 
 ```
 
-### 关于倾斜摄影悬空的问题
+### 关于视角切换模型或者实体出现漂移的问题
 ```js
+// 如果给定的模型高度是高于地面的，则可以关闭地形
+viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+// 开启地形深度检测
+viewer.scene.globe.depthTestAgainstTerrain = true;
+```
+### 关于标注billboard，视角切换billboard会偏移的问题
+```js
+// verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+ const entityPoint = this.viewer.entities.add({
+    name: '',
+    position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 10),
+    billboard: {
+        image: icon1,//图标地址
+        // 固定位置
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        scale: 0.3,
+        pixelOffset: new Cesium.Cartesian2(-6, 6),
+        // 设置距离控制可见度
+        disableDepthTestDistance: 2e3
+    },
+    label: {
+        scale: 1,
+        font: "bolder 16px sans-serif",
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        text: '摄像头',//图标名称
+        fillColor: Cesium.Color.fromCssColorString("#ffffff"),
+        pixelOffset: new Cesium.Cartesian2(0, -60)
+    },
+    // type 类型/虽然该字段在Entity类型中不存在，但你依旧可以添加其他字段，并且在查询是该字段也会获取到
+    type: 'billboard',
+})
+```  
+
+### 笛卡尔空间直角坐标系（Cartesian3）-->WGS84坐标系
+```js
+var cartographic = Cesium.Cartographic.fromCartesian(cartesian3);//笛卡尔转换为弧度 
+//使用经纬度和弧度的转换，将WGS84弧度坐标系转换到目标值，弧度转度 
+var longitude = Cesium.Math.toDegrees(cartographic.longitude);
+var latitude = Cesium.Math.toDegrees(cartographic.latitude);
+var height = cartographic.height;
 ```
