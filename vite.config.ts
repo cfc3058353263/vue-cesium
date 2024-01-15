@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import cesium from 'vite-plugin-cesium';//1.引入cesium
 import vueJsx from '@vitejs/plugin-vue-jsx';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +12,14 @@ export default defineConfig({
       cesium(),//2.使用插件
       vueJsx()
     ],
+  resolve: {
+    alias: {
+      // 设置路径
+      "~": path.resolve(__dirname, "./"),
+      // 设置别名
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   server: {
     port: 8850,
     host: true,

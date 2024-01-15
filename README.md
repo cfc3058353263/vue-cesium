@@ -239,12 +239,18 @@ viewer.entities.add({
 ```js
 // DataSource是用于表示和呈现地理空间数据的类。DataSource包含了一组实体(Entity)对象，每个实体都包含了地理位置、几何形状、材质、文本标注等属性，用于在Cesium Viewer中呈现地理空间数据。
 ```
-
+### 轨迹回放
+```js
+// 逻辑
+// 1. 首先需要一条线路,其格式是一些经纬度点的集合
+// 2. 根据每个经纬度设置其所对应的时间点(这里要设置每秒进行几米)
+```
 
 
 
 ## 关于点击事件的问题
 通常来说最好只有一个监听的点击事件，当你要切换事件监听时，务必将之前的事件监听停掉，保证一次点击只在一个事件监听中
+
 
 ### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
 ```js
@@ -259,6 +265,7 @@ viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
 // 开启地形深度检测
 viewer.scene.globe.depthTestAgainstTerrain = true;
 ```
+
 ### 关于标注billboard，视角切换billboard会偏移的问题
 ```js
 // verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
