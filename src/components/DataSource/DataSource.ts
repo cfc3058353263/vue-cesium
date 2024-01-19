@@ -76,5 +76,25 @@ export class DataSource {
             ),
             endTransform: Cesium.Matrix4.IDENTITY,
         });
+        // try {
+        //     const tileset = Cesium.Cesium3DTileset.fromUrl('http://172.0.0.1:8888/model/Photogrammetry/tileset.json');
+        //     this.viewer.scene.primitives.add(tileset);
+        //     if (this.viewer.scene.clampToHeightSupported) {
+        //         tileset.initialTilesLoaded.addEventListener(start);
+        //     } else {
+        //         window.alert("This browser does not support clampToHeight.");
+        //     }
+        // } catch (error) {
+        //     console.log(`Error loading tileset: ${error}`);
+        // }
+
+        // const start = () => {
+        //     this.viewer.clock.shouldAnimate = true;
+        //     const objectsToExclude = [entity];
+        //     this.viewer.scene.postRender.addEventListener(() => {
+        //         const position = positionProperty.getValue(this.viewer.clock.currentTime);
+        //         entity.position = this.viewer.scene.clampToHeight(position, objectsToExclude);
+        //     });
+        // }
     }
 }

@@ -1,97 +1,10 @@
-# 需要一个不带后台的若依前端项目
-
-###  geoserver安装部署
-###  geoserver 接口服务查询
-###  多边形绘制工具
-###  不同级别下的地图图层展示
-###  cesium图层引入
-
-设置高度参数
-是否可以编辑
-
-
-### 编辑操作 
-点击点可以进行拖住操作；
-点击边，在边上生成一个可以进行拖住点，之后进行编辑
-
-### 根据平面数据添加高度生成立体数据
-
-### 保存/还原/删除
-数据格式
-{
-   id:'',
-   name: '',
-   data: [],
-   type: '',
-   color: ''
-}
-
-[
-    {
-        "x": 1309517.3687710846,
-        "y": -4642114.222481885,
-        "z": 4159324.254014073
-    },
-    {
-        "x": 1322930.2618680482,
-        "y": -4652508.811422034,
-        "z": 4143541.8261547
-    },
-    {
-        "x": 1332093.879154647,
-        "y": -4644769.549563497,
-        "z": 4149246.2563269013
-    }
-]
-
-
-### wmts 加载 / 倾斜摄影的加载
-
-### 影像图添加根据不同级别显示不同分辨率的图层
-
-### 倾斜摄影图层添加根据不同级别显示不同分辨率的图层
-
-
-### 添加多个多边形且保存到
-保存格式
-```js
-[
-    {
-        id:'xxxxx-xxxx-xxxx', //标识
-        name: '', //名称
-        data: [], // 经纬度
-        show: '', // 状态是否显示隐藏
-        color: ', //多边形颜色，
-        state: '', //是否是选中状态
-    }
-]
-```
-### 隐藏之后如何显示还原
-
-### 拖拽，高亮，回显，保存
-
-### 修改点击边添加编辑点，且重新绘制实体
-
-### 使用步骤
-1. 开始绘制面
-2. 绘制完成后，右键结束绘制
-3. 
-
-
-### 开发
-1. 区块添加
-2. 路线/路线导航
-4. 模型区块模型高亮显示
-5. 圆形/椭圆
-6. 不同级别显示不同分辨率的图层
-
 
 ### 高德等其他影像图的添加方式
 ```js
 const imageLayers = viewer.value.imageryLayers
 // 清空默认影像图
 imageLayers.remove(imageLayers.get(0))
-// 加载高德影像图
+// c
 var gaodeImageryProvider = new Cesium.UrlTemplateImageryProvider({
     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
     maximumLevel: 18,
@@ -136,7 +49,8 @@ viewer.zoomTo(tileset)
 ### 倾斜摄影单体化
 ```js
 // 单体化简单点说就是在模型上贴一层膜，然后在点击的时候让膜显示，并展示数据。
-// 实例出一些透明的立方体或其他几何体，通过调位置大小，覆盖在你想单体化的楼栋上面，再通过ClassificationPrimitive反选倾斜摄影赋予颜色。 https://www.vvpstk.com/public/Cesium/Documentation/ClassificationPrimitive.html?classFilter=ClassificationPrimitive
+// 实例出一些透明的立方体或其他几何体，通过调位置大小，覆盖在你想单体化的楼栋上面，再通过ClassificationPrimitive反选倾斜摄影赋予颜色。 
+// https://www.vvpstk.com/public/Cesium/Documentation/ClassificationPrimitive.html?classFilter=ClassificationPrimitive
 // 在单体化的时候一般是用BoxGeometry实现的 例如
 var tilesModelObj = scene.primitives.add(new Cesium.ClassificationPrimitive({
     geometryInstances : Cesium.BoxGeometry.fromDimensions({
@@ -246,18 +160,6 @@ viewer.entities.add({
 // 2. 根据每个经纬度设置其所对应的时间点(这里要设置每秒进行几米)
 ```
 
-
-
-## 关于点击事件的问题
-通常来说最好只有一个监听的点击事件，当你要切换事件监听时，务必将之前的事件监听停掉，保证一次点击只在一个事件监听中
-
-
-### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
-```js
-运行
-yarn config set ignore-engines true 
-```
-
 ### 关于视角切换模型或者实体出现漂移的问题
 ```js
 // 如果给定的模型高度是高于地面的，则可以关闭地形
@@ -303,3 +205,83 @@ var latitude = Cesium.Math.toDegrees(cartographic.latitude);
 var height = cartographic.height;
 ```
 
+### 相机
+```js
+https://blog.csdn.net/Raccon_/article/details/127281362
+
+https://blog.csdn.net/ljy1998dsb/article/details/124072373?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-4-124072373-blog-132210829.235^v40^pc_relevant_3m_sort_dl_base3&spm=1001.2101.3001.4242.3&utm_relevant_index=7
+```
+
+### 二维场景与三维厂家切换
+
+### 动画
+
+
+### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
+```js
+运行
+yarn config set ignore-engines true 
+```
+
+
+
+### cesiun api
+```js
+Cesium的所有API汇总：
+// Core：核心模块，包含Cesium的基础构件、数据结构、算法等。
+// Scene：场景模块，包含Cesium的渲染引擎、摄像机、灯光、图像合成等。
+// Widgets：小部件模块，包含Cesium的用户界面、控制面板、信息窗口等。
+// DataSources：数据源模块，包含Cesium的数据解析、可视化、编辑等。
+// ThirdParty：第三方模块，包含Cesium的依赖库、插件、工具等。
+// Workers：工作线程模块，包含Cesium的并行计算、异步加载等。
+// Plugins：插件模块，包含Cesium的地理编码、路线规划、地形分析等。
+
+每个模块都包含了许多API，以下是一些常用的API：
+// Cesium：Cesium命名空间，包含Cesium的全局变量、常量、函数等。
+// Viewer：Cesium.Viewer类，用于创建和管理Cesium场景和小部件。
+// Camera：Cesium.Camera类，用于管理摄像机的位置、朝向、视野等。
+// Entity：Cesium.Entity类，用于描述Cesium场景中的实体，包含位置、属性、图形等。
+// DataSource：Cesium.DataSource类，用于加载和解析各种格式的地理数据源。 如 kml czml等
+// ImageryLayer：Cesium.ImageryLayer类，用于管理Cesium场景中的图像图层。
+// TerrainProvider：Cesium.TerrainProvider类，用于加载和管理Cesium场景中的地形数据源。
+// Ellipsoid：Cesium.Ellipsoid类，用于描述Cesium场景中的椭球体。
+// Color：Cesium.Color类，用于描述颜色，包含RGBA、HSVA等。
+// Cartesian3：Cesium.Cartesian3类，用于描述三维空间中的点，包含x、y、z坐标。
+
+```
+
+### cesium 事件
+#### 以鼠标操作（左键、中键、右键操作等）为主的 ScreenSpaceEventHandler 类
+#### 相机控制事件类 screenSpaceCameraController 并不是像鼠标事件相关类
+```js
+// ScreenSpaceEventHandler 那样需要提前实例化。Cesium在Viewer类的实例化过程中，也实例化了其他很多类，其中就包括ScreenSpaceCameraController类，并把实例化结果赋值给了viewer.scene.screenSpaceCameraController。所以，我们直接去操作viewer.scene.screenSpaceCameraController就可以了。
+```
+#### 场景渲染事件
+```js
+场景渲染事件主要包括以下四种：
+scene.preUpdate： 更新或呈现场景之前将引发的事件
+scene.postUpdate： 场景更新后以及渲染场景之前立即引发的事件
+scene.preRender： 场景更新后以及渲染场景之前将引发的事件
+scene.postRender： 渲染场景后立即引发的事件
+
+preRender: 预渲染事件，在场景预处理之后，相机视角确定之前调用。此事件在场景开始渲染之前调用，因此可以使用此事件来执行一些初始化或准备工作，例如：获取视口或获取相机参数。
+postRender: 渲染后事件，在场景完成渲染之后调用。此事件可以用于处理场景渲染的逻辑，例如：处理绘制、设置绘制命令等。
+preUpdate: 预更新事件，在更新前的准备工作阶段调用。此事件在执行场景更新之前调用，可以使用此事件来检查更新是否需要执行，例如：检查更新是否需要更新相机或场景。
+postUpdate: 更新后事件，在更新完成后调用。此事件在执行场景更新之后调用，可以使用此事件来处理更新后的逻辑，例如：处理相机或场景的更新结果。
+
+在代码中需要addEventListener来进行绑定,用removeEventListener来移除绑定
+```
+
+### 经纬度转换
+```js
+// 高德转84  国测GCJ-02 --> 84 
+var gcj02towgs84=coordtransform.gcj02towgs84(**116.404, 39.915**);
+// 百度转84  (BD-09) --> 84
+// 线百度经纬度坐标转国测局坐标
+var bd09togcj02=coordtransform.bd09togcj02(116.404, 39.915);
+var gcj02towgs84=coordtransform.gcj02towgs84(bd09togcj02);
+```
+
+### 加载wmts https://blog.csdn.net/m0_48524977/article/details/126527469
+
+http://localhost:8080/geoserver/gwc/service/wmts/rest/topp:states/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png

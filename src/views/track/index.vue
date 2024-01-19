@@ -1,7 +1,7 @@
 <template>
     <div ref="cesiumContainer" id="cesiumContainer">
         <div class="draw">
-            <el-button type="primary" @click="">轨迹回放</el-button>
+            <el-button type="primary" @click="playback">轨迹回放</el-button>
         </div>
     </div>
 </template>
@@ -10,6 +10,7 @@
 import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
 import { Track } from "@/components/Track/Track.ts"
+import { Model } from "@/components/Model/Model.ts"
 // 当前组件的实例
 const cesiumContainer = ref();
 // 创建Cesium Viewer
@@ -40,6 +41,7 @@ const initMap = async () => {
         //     credit: 'Amap'
         // })),
     });
+    viewer.value.scene.debugShowFramesPerSecound = true;
     //创建DataSource
     var datasource = new Cesium.CustomDataSource("enetiestestdata");
     viewer.value.dataSources.add(datasource)
@@ -57,13 +59,27 @@ const initMap = async () => {
     // });
 };
 
-let track: Track
+const playback = ()=>{
+    track.sampleHeights();
+}
 
+let track: Track
+let model = ref();
+let tileset = ref<Cesium.Cesium3DTileset>();
 onMounted(async () => {
     initMap();
-    const handle = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
-    track = new Track(viewer.value, handle)
-    track.craterDataSource()
+    // 如果给定的模型高度是高于地面的，则可以关闭地形
+    viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    // 开启地形深度检测
+    viewer.value.scene.globe.depthTestAgainstTerrain = true;
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
+    track = new Track(viewer.value, handler)
+    track.handlerLeftClick()
+    // track.craterDataSource()
+    model.value = new Model(viewer.value, handler)
+    tileset.value = await model.value.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
+    model.value.changeHeight(tileset.value, -65)
+
 });
 </script>
   

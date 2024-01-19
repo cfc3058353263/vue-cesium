@@ -2,7 +2,7 @@
   <div ref="cesiumContainer" id="cesiumContainer">
     <div class="draw">
         <el-button type="primary" @click="draw">开启绘制</el-button>
-        <el-button type="primary" @click="edit">开启编辑</el-button>
+        <!-- <el-button type="primary" @click="edit">开启编辑</el-button> -->
     </div>
   </div>
 </template>

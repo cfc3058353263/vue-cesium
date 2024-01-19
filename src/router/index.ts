@@ -134,6 +134,19 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
         ],
     },
+    {
+        path: '/imageMap',
+        component: Layout,
+        redirect: '/imageMap',
+        children: [
+            {
+                path: '/imageMap',
+                component: () => import('@/views/imageMap/index.vue'),
+                name: 'ImageMap',
+                meta: { title: '影像图', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
 ];
 
 const router = createRouter({

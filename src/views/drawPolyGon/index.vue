@@ -4,7 +4,7 @@
             <el-button type="primary" size="small" @click="drawPolygon()">开始绘制</el-button>
         </div>
         <el-drawer v-model="drawer" title="I am the title" :with-header="false" :modal="false" modal-class="drawerModal">
-            <!-- <el-form ref="ruleFormRef" :model="form" status-icon label-width="120px" class="demo-ruleForm">
+            <el-form ref="ruleFormRef" :model="form" status-icon label-width="120px" class="demo-ruleForm">
                 <el-form-item label="实体名称" prop="name">
                     <el-input v-model="form.name" autocomplete="off" @change="handleChangeName" />
                 </el-form-item>
@@ -13,7 +13,8 @@
                         @change="handleChangeHeight" /> 米
                 </el-form-item>
                 <el-form-item label="离地高度" prop="height">
-                    <el-input-number v-model="form.height" :min="0" :max="1000"  size="small" controls-position="right" @change="handleChangeHeight" /> 米
+                    <el-input-number v-model="form.height" :min="0" :max="1000" size="small" controls-position="right"
+                        @change="handleChangeHeight" /> 米
                 </el-form-item>
                 <el-form-item label="是否隐藏" prop="show">
                     <el-switch v-model="form.show" @change="handleChangeShow" />
@@ -25,8 +26,7 @@
                     <el-button type="primary" @click="handleSubmit">保存</el-button>
                     <el-button @click="">重置</el-button>
                 </el-form-item>
-            </el-form> -->
-
+            </el-form>
         </el-drawer>
     </div>
 </template>
@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref, reactive, toRefs } from "vue";
-import { PolyGon } from '@/components/PolyGon/PolyGon.ts';
+import { PolyGon, drawer, form } from '@/components/Polygon/PolyGon.ts';
 import cache from '@/plugins/cache.ts'
 const { local } = cache
 
@@ -73,7 +73,6 @@ const initMap = async () => {
         },
     });
 };
-const drawer = ref()
 // polyGon实例
 let polyGon: any
 // 绘制多边形
@@ -81,26 +80,26 @@ const drawPolygon = () => {
     polyGon.draw()
 }
 
-// // 修改名称
-// const handleChangeName = () => {
-//     polyGon.setName()
-// }
-// // 修改高度
-// const handleChangeHeight = () => {
-//     polyGon.drawPolyhedron()
-// }
-// //  修改颜色
-// const handleChangeColor = () => {
-//     polyGon.setColor()
-// }
-// // 显示隐藏
-// const handleChangeShow = () => {
-//     polyGon.setShow()
-// }
-// // 保存
-// const handleSubmit = () => {
-//     polyGon.save()
-// }
+// 修改名称
+const handleChangeName = () => {
+    polyGon.setName()
+}
+// 修改高度
+const handleChangeHeight = () => {
+    polyGon.drawPolyhedron()
+}
+//  修改颜色
+const handleChangeColor = () => {
+    polyGon.setColor()
+}
+// 显示隐藏
+const handleChangeShow = () => {
+    polyGon.setShow()
+}
+// 保存
+const handleSubmit = () => {
+    polyGon.save()
+}
 onMounted(async () => {
     initMap()
     // 如果给定的模型高度是高于地面的，则可以关闭地形
@@ -115,10 +114,10 @@ onMounted(async () => {
     polyGon.handlerLeftClick()
     polyGon.handlerMouseMove()
     polyGon.handerRightClick()
-    if(local.getJSON('polygon')){
-        const data =  JSON.parse(local.getJSON('polygon'))
-        data && polyGon.drawDatapolygon(data)
-    }
+    // if (local.getJSON('polygon')) {
+    //     const data = JSON.parse(local.getJSON('polygon'))
+    //     data && polyGon.drawDatapolygon(data)
+    // }
 });
 
 </script>

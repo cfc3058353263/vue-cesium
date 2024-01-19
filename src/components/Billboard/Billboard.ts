@@ -66,13 +66,13 @@ export class Billboard {
                 scaleByDistance: new Cesium.NearFarScalar(0, 0.3, 1050, 0.1),
                 // scale: 0.1,
             },
-            label: {
-                scale: 1,
-                font: "bolder 16px sans-serif",
-                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                text: '摄像头',//图标名称
-                fillColor: Cesium.Color.fromCssColorString("#ffffff"),
-            },
+            // label: {
+            //     scale: 1,
+            //     font: "bolder 16px sans-serif",
+            //     style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            //     text: '摄像头',//图标名称
+            //     fillColor: Cesium.Color.fromCssColorString("#ffffff"),
+            // },
             // type 类型/虽然该字段在Entity类型中不存在，但你依旧可以添加其他字段，并且在查询是该字段也会获取到
             type: 'billboard',
         })

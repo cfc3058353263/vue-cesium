@@ -30,7 +30,14 @@ export default defineConfig({
         target: 'http://127.0.0.1:8080',
         changeOrigin: true,
         rewrite: p => p.replace(/^\/geoserver/, ''),
-      }
+      },
+      '/gisserver': {
+        target: 'https://services.arcgisonline.com', //接口域名
+        changeOrigin: true, //是否跨域
+        ws: true, //是否代理 websockets
+        secure: true, //是否https接口
+        rewrite: path => path.replace(/^\/gisserver/, ''),
+      },
     },
   },
 })

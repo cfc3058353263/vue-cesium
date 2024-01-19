@@ -29,17 +29,35 @@ const initMap = async () => {
     selectionIndicator: false
   });
   // 相机飞入点
-  viewer.value.camera.setView({
-    // destination: Cesium.Cartesian3.fromDegrees(119.76426786809103, 36.142744517915986, 2000),
-    destination: Cesium.Cartesian3.fromDegrees(-73.97198, 40.7761, 2000),
-    orientation: {
-      // 指向
-      heading: Cesium.Math.toRadians(0.0),
-      // 视角
-      pitch: Cesium.Math.toRadians(-90),
-      roll: 0.0,
+  // viewer.value.camera.setView({
+  //   // destination: Cesium.Cartesian3.fromDegrees(119.76426786809103, 36.142744517915986, 2000),
+  //   destination: Cesium.Cartesian3.fromDegrees(-73.97198, 40.7761, 2000),
+  //   orientation: {
+  //     // 指向
+  //     heading: Cesium.Math.toRadians(0.0),
+  //     // -90 视角 由上往下
+  //     pitch: Cesium.Math.toRadians(-45),
+  //     // 翻滚角
+  //     roll: 0.0,
+  //   },
+  // });
+  viewer.value.camera.flyTo({
+    // destination: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 1000),
+    destination: {
+      "x": -2518829.629660936,
+      "y": 4848644.594240261,
+      "z": 3279401.2055265936
     },
-  });
+    orientation: {
+      heading: Cesium.Math.toRadians(0),
+      pitch: Cesium.Math.toRadians(-30),
+      roll: Cesium.Math.toRadians(0)
+    },
+    duration: 3
+  }).then(function () {
+    viewer.value.camera.rotateLeft(Cesium.Math.toRadians(90), 3);
+  })
+
   var handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
   handler.setInputAction(async function (movement: any) {
     var pickedFeature = viewer.value.scene.pick(movement.position);
@@ -312,6 +330,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 #cesiumContainer {
   height: 100%;
+
   .draw {
     position: absolute;
     z-index: 999;
