@@ -147,6 +147,32 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
         ],
     },
+    {
+        path: '/heatMap',
+        component: Layout,
+        redirect: '/heatMap',
+        children: [
+            {
+                path: '/heatMap',
+                component: () => import('@/views/heatMap/index.vue'),
+                name: 'HeatMap',
+                meta: { title: '热力图', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
+    {
+        path: '/pointTogether',
+        component: Layout,
+        redirect: '/pointTogether',
+        children: [
+            {
+                path: '/pointTogether',
+                component: () => import('@/views/pointTogether/index.vue'),
+                name: 'PointTogether',
+                meta: { title: '点聚合', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
 ];
 
 const router = createRouter({

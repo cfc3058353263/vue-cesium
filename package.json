@@ -9,11 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dvgis/cesium-map": "^3.1.0",
     "axios": "^1.6.3",
     "cesium": "^1.113.0",
+    "cesium-navigation-es6": "^3.0.8",
     "coordtransform": "^2.1.2",
     "element-plus": "^2.4.4",
-    "moment": "^2.30.1",
+    "three.js": "^0.77.1",
     "vite-plugin-cesium": "^1.2.22",
     "vue": "^3.3.11",
     "vue-router": "^4.2.5"

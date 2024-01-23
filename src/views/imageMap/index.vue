@@ -25,8 +25,10 @@ import coordtransform from 'coordtransform';
 import { Billboard } from '@/components/Billboard/Billboard.ts';
 import icon from '@/assets/images/icon4.png'
 import axios from "axios";
+import { AmapImageryProvider, BaiduImageryProvider, GeoVisImageryProvider } from '@dvgis/cesium-map'
+import CesiumNavigation from "cesium-navigation-es6";
+import type { NavigationOptions } from 'cesium-navigation-es6'
 
-const billboard = new Billboard();
 // 创建Cesium Viewer
 const viewer = ref();
 // 初始化地图
@@ -42,10 +44,18 @@ const initMap = async () => {
         fullscreenButton: false,
         infoBox: false,
         selectionIndicator: false,
-
+        // baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+        //     Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+        //         Cesium.ArcGisBaseMapType.SATELLITE
+        //     )
+        // ),
     });
+
+    viewer.value.cesiumWidget.creditContainer.style.display = "none";
+    // 北京高德地图坐标转84坐标
     const bj84 = coordtransform.gcj02towgs84(116.397455, 39.909187)
-    const entityPoint = viewer.value.entities.add({
+    // 添加北京的标注
+    viewer.value.entities.add({
         name: '',
         // 10 是用来设置广告牌的距离地面的高度
         position: Cesium.Cartesian3.fromDegrees(bj84[0], bj84[1], 10),
@@ -74,22 +84,47 @@ const initMap = async () => {
             roll: 0.0,
         },
     })
-    // viewer.value.camera.flyTo({
-    //     // destination: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 1000),
-    //     destination: {
-    //         "x": -2518829.629660936,
-    //         "y": 4848644.594240261,
-    //         "z": 3279401.2055265936
-    //     },
-    //     orientation: {
-    //         heading: Cesium.Math.toRadians(0),
-    //         pitch: Cesium.Math.toRadians(-30),
-    //         roll: Cesium.Math.toRadians(0)
-    //     },
-    //     duration: 3
-    // }).then(function () {
-    //     viewer.value.camera.rotateLeft(Cesium.Math.toRadians(90), 3);
-    // })
+    /**相机视角锁死 */
+    viewer.value.scene.screenSpaceCameraController.minimumZoomDistance = 200;//相机的高度的最小值
+    viewer.value.scene.screenSpaceCameraController.maximumZoomDistance = 3500000;  //相机高度的最大值
+    viewer.value.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
+    viewer.value.scene.screenSpaceCameraController._maximumZoomRate = 5906376272000    //设置相机放大时的速率
+    // // 相机将锁定到当前标题,鼠标不能拖动地图
+    // viewer.value.scene.screenSpaceCameraController.enableRotate = false;
+    // // 如果为true，则允许用户平移地图。如果为假，相机将保持锁定在当前位置。此标志仅适用于2D和Columbus视图模式。
+    // viewer.value.scene.screenSpaceCameraController.enableTranslate = false;
+    // // 如果为true，允许用户放大和缩小。如果为假，相机将锁定到距离椭圆体的当前距离
+    // viewer.value.scene.screenSpaceCameraController.enableZoom = false;
+    // // 如果为true，则允许用户倾斜相机。如果为假，相机将锁定到当前标题。这个标志只适用于3D和哥伦布视图。鼠标滚轮按下
+    // viewer.value.scene.screenSpaceCameraController.enableTilt = false;
+    /**相机视角锁死 */
+
+    // 罗盘控件
+    const options: NavigationOptions = {};
+    options.defaultResetView = Cesium.Cartographic.fromDegrees(bj84[0], bj84[1], 2000)
+    //相机方向
+    options.orientation = {
+        pitch: Cesium.Math.toRadians(-45)
+    }
+    //相机延时
+    // options.duration = 4//默认为3s
+
+    // 用于启用或禁用罗盘。true是启用罗盘，false是禁用罗盘。默认值为true。如果将选项设置为false，则罗盘将不会添加到地图中。
+    options.enableCompass = true;
+    // 用于启用或禁用缩放控件。true是启用，false是禁用。默认值为true。如果将选项设置为false，则缩放控件将不会添加到地图中。
+    options.enableZoomControls = true;
+    // 用于启用或禁用距离图例。true是启用，false是禁用。默认值为true。如果将选项设置为false，距离图例将不会添加到地图中。
+    options.enableDistanceLegend = true;
+    // 用于启用或禁用指南针外环。true是启用，false是禁用。默认值为true。如果将选项设置为false，则该环将可见但无效。
+    options.enableCompassOuterRing = true;
+
+    //修改重置视图的tooltip
+    options.resetTooltip = "重置视图";
+    //修改放大按钮的tooltip
+    options.zoomInTooltip = "放大";
+    //修改缩小按钮的tooltip
+    options.zoomOutTooltip = "缩小";
+    new CesiumNavigation(viewer.value, options);
 };
 const layerList = reactive([
     {
@@ -137,32 +172,45 @@ const layerList = reactive([
         name: "wmts",
         iconUrl: AnnotationImg
     },
+    {
+        id: "geojson",
+        name: "山东",
+        iconUrl: AnnotationImg
+    },
 ]);
 //底图
 const basLayers = {
     //高德矢量
-    tdtLayer: new Cesium.UrlTemplateImageryProvider({
-        url: 'http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
-        minimumLevel: 3,
-        maximumLevel: 18,
-    }),
-    // tdtLayer: new Cesium.AmapImageryProvider({
-    //     style: 'img',
-    //     crs: 'WGS84'
+    // tdtLayer: new Cesium.UrlTemplateImageryProvider({
+    //     url: 'http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+    //     minimumLevel: 3,
+    //     maximumLevel: 18,
     // }),
+    tdtLayer: new AmapImageryProvider({
+        style: 'elec', // style: img、elec、cva
+        crs: 'WGS84' // 使用84坐标系，默认为：GCJ02
+    }),
     //高德影像
-    tdtImgLayer: new Cesium.UrlTemplateImageryProvider({
-        url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-        minimumLevel: 3,
-        maximumLevel: 18,
+    // tdtImgLayer: new Cesium.UrlTemplateImageryProvider({
+    //     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+    //     minimumLevel: 3,
+    //     maximumLevel: 18,
+    // }),
+    tdtImgLayer: new AmapImageryProvider({
+        style: 'img', // style: img、elec、cva
+        crs: 'WGS84' // 使用84坐标系，默认为：GCJ02
     }),
     //高德注记
-    tdtAnnoLayer: new Cesium.UrlTemplateImageryProvider({
-        url: 'http://webst02.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8',
-        layer: 'tdtAnnoLayer',
-        style: 'default',
-        format: 'image/jpeg',
-        tileMatrixSetID: 'GoogleMapsCompatible',
+    // tdtAnnoLayer: new Cesium.UrlTemplateImageryProvider({
+    //     url: 'http://webst02.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8',
+    //     layer: 'tdtAnnoLayer',
+    //     style: 'default',
+    //     format: 'image/jpeg',
+    //     tileMatrixSetID: 'GoogleMapsCompatible',
+    // }),
+    tdtAnnoLayer: new AmapImageryProvider({
+        style: 'cva', // style: img、elec、cva
+        crs: 'WGS84' // 使用84坐标系，默认为：GCJ02
     }),
     tdMap: new Cesium.WebMapTileServiceImageryProvider({
         url: "http://t{s}.tianditu.gov.cn/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=b679e53c0eca7f1f302d4336b6e21b2c",
@@ -182,6 +230,10 @@ const basLayers = {
         minimumLevel: 0,
         // maximumLevel: 5,
     }),
+    bdMap: new BaiduImageryProvider({
+        style: 'normal', // style: img、vec、normal、dark
+        crs: 'WGS84' // 使用84坐标系，默认为：GCJ02
+    }),
     esri: Cesium.ArcGisMapServerImageryProvider.fromUrl(
         'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer',
     ),
@@ -194,7 +246,7 @@ const basLayers = {
         // format: 'image/png',
         // tileMatrixSetID: 'EPSG:4326',
         // tilingScheme: new Cesium.GeographicTilingScheme(),
-    })
+    }),
 };
 // 添加wfs图层
 const addWFSTileLayer = () => {
@@ -214,7 +266,6 @@ const addWFSTileLayer = () => {
             },
         })
         .then((res) => {
-            console.log(res);
             const data = res.data;
             const sourcePromise = Cesium.GeoJsonDataSource.load(data);
             sourcePromise.then(function (dataSource) {
@@ -223,10 +274,22 @@ const addWFSTileLayer = () => {
             });
         });
 };
+// 添加geoJson数据
+const addGeoJsonData = () => {
+    const sourcePromise = Cesium.GeoJsonDataSource.load('https://geo.datav.aliyun.com/areas_v3/bound/370000_full.json', {
+        stroke: Cesium.Color.WHITE, //边界颜色
+        fill: Cesium.Color.BLUE.withAlpha(0.1), //注意：颜色必须大写，即不能为blue，区域颜色
+        strokeWidth: 5, //折线和多边形轮廓的宽度
+    });
+    sourcePromise.then(function (dataSource) {
+        viewer.value.dataSources.add(dataSource);
+        viewer.value.flyTo(dataSource);
+    });
+}
 
 //底图切换
-const changeBaseLayer = (mapTag: string) => {
-    const imageLayers = viewer.value.imageryLayers
+const changeBaseLayer = async (mapTag: string) => {
+    const imageLayers = await viewer.value.imageryLayers
     switch (mapTag) {
         case 'gddz': //高德矢量
             imageLayers.addImageryProvider(basLayers.tdtLayer, imageLayers.length);
@@ -243,11 +306,12 @@ const changeBaseLayer = (mapTag: string) => {
         case 'tdmapcva': //天地图标注
             imageLayers.addImageryProvider(basLayers.tdMapCav, imageLayers.length);
             break;
-        case 'esri': //ArcGIS
-            imageLayers.addImageryProvider(basLayers.esri, imageLayers.length);
+        case 'bdmap':
+            imageLayers.addImageryProvider(basLayers.bdMap, imageLayers.length);
             break;
         case 'esri': //ArcGIS
-            imageLayers.addImageryProvider(basLayers.esri, imageLayers.length);
+            const esri = await basLayers.esri;
+            imageLayers.addImageryProvider(esri, imageLayers.length);
             break;
         case 'wfs': //wfs
             addWFSTileLayer()
@@ -255,31 +319,23 @@ const changeBaseLayer = (mapTag: string) => {
         case 'wmts': //wfs
             imageLayers.addImageryProvider(basLayers.wmts, imageLayers.length)
             break;
+        case 'geojson':
+            addGeoJsonData()
+            break;
         case 'destroy':
+            // 移除所有影像图层
             const length = imageLayers.length
             for (let i = length - 1; i > 0; i--) {
                 imageLayers.remove(imageLayers.get(i))
             }
+            // 移除wfs图层
+            viewer.value.dataSources.removeAll()
             break;
     }
 };
-const tileLevel = () => {
-    let tiles = new Set();
-    let tilesToRender = viewer.value.scene.globe._surface._tilesToRender;
-    if (Cesium.defined(tilesToRender)) {
-        for (let i = 0; i < tilesToRender.length; i++) {
-            tiles.add(tilesToRender[i].level);
-        }
-        console.log("当前地图瓦片级别为:");
-        console.log(tiles);
-    }
-}
 
 onMounted(() => {
     initMap();
-    tileLevel()
-    // const imageLayers = viewer.value.imageryLayers
-    // imageLayers.addImageryProvider(basLayers.arcgisLayer);
 });
 </script>
   
@@ -292,6 +348,8 @@ onMounted(() => {
         z-index: 999;
 
         .base-layer-diag__content {
+            display: flex;
+
             .content__thumb {
                 text-align: center;
                 width: 70px;

@@ -12,7 +12,7 @@ import "cesium/Source/Widgets/widgets.css";
 const app = createApp(App)
 
 Cesium.Ion.defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMmNlM2FiZS0yODg5LTRlNGMtYjdlNS1jZDhkZGQ1NTg1NjEiLCJpZCI6MTE1NTU2LCJpYXQiOjE2NjkwMTY5MzN9.7ebJtPCp8kTWTtlREiyTD5d2JLgUBn71k_7UtrJCwQE";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkZGE2ZGNhYi1kYmY0LTQ0MmEtYWJjMy1mYTk3NDUxYjg0NzIiLCJpZCI6MTY3NjUwLCJpYXQiOjE3MDU4ODQyMzV9.77aWENLVGoiX7OPLMIQeX_VZ5qUkaSRSeY4CDAbskqg";
 app.config.globalProperties.$Cesium = Cesium;
 
 app.use(router);

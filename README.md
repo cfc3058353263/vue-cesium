@@ -285,3 +285,94 @@ var gcj02towgs84=coordtransform.gcj02towgs84(bd09togcj02);
 ### 加载wmts https://blog.csdn.net/m0_48524977/article/details/126527469
 
 http://localhost:8080/geoserver/gwc/service/wmts/rest/topp:states/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png
+
+### 关于viewer https://zhuanlan.zhihu.com/p/80904975?utm_id=0
+```js
+// Viewer是Cesium中用于显示3D场景的组件。它提供了创建和控制3D场景所需的所有基本功能，包括加载3D模型、添加图像覆盖物、设置相机位置和方向、处理用户输入等。
+const viewer= new Cesium.Viewer('mycesium',{
+    animation:false,//动画小组件,即左下角的仪表，默认为true
+    baseLayerPicker:true,//是否显示图层选择器，默认为true
+    fullscreenButton:true,//是否显示全屏按钮，默认为true
+    geocoder:true,//是否显示Geocoder（右上角的查询按钮），默认为true
+    homeButton:true,//上是否显示Home按钮
+    infoBox:false,//是否显示信息框
+    sceneModelPicker:true,//是否显示三位地球/二维地图选择器
+    selectionIndicator:false,//是否显示选取指示器（鼠标点击显示绿框）
+    timeline:false,//时间轴
+    navigationHelpButton:true,//是否显示右上角的帮助按钮
+    scene3DOnly:true,//如果设置为true，则所有几何图形以三维模式绘制以节约GPU资源，默认为false
+    clock:new Cesium.Clock(),//用于控制当前时间的时钟对象
+    baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+      Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+        Cesium.ArcGisBaseMapType.SATELLITE
+      )
+    ),//设置底图图层，尽在baseLayerPicker属性设置为flase时有意义
+    terrainProvider:new Cesium.EllipsoidTerrainProvider(),//设置地形图层，仅在baseLayerPicker设置为false时有意义
+    skyBox:new Cesium.skyBox({
+        sources:{
+            positiveX:'Cesium-1.7.1/Skybox/px.jpg',
+            negativeX:'Cesium-1.7.1/Skybox/mx.jpg',
+            positiveY:'Cesium-1.7.1/Skybox/py.jpg',
+            negativeY:'Cesium-1.7.1/Skybox/my.jpg',
+            positiveZ:'Cesium-1.7.1/Skybox/pz.jpg',
+            negativeZ:'Cesium-1.7.1/Skybox/mz.jpg',
+        }
+    }),//用于渲染星空的SkyBox对象
+    fullscreenElement:document.body,//全屏时渲染的html元素
+    useDefaultRenderLoop:true,//如果需要控制渲染循环，则设置为true
+    targetFrameRate:undefined,//使用默认render loop时的帧率
+    showRenderLoopErrors:false,//如果设置为true，将显示错误信息
+    automaticallyTrackDataSourceClocks:true,//自动追踪最近添加的数据源式中设置
+    contextOptions:undefined,//传递给Scene对象的上下文参数（scene.options）
+    sceneMode:Cesium.sceneMode.SCENE3D,//初始化场景模式
+    mapProjection:new Cesium.WebMercatorProjection(),//地图投影体系
+    dataScurces:new Cesium.DataSourceCollection()//需要进行可视化的数据源集合
+});
+// 常用方法：
+// destroy(): 销毁Viewer实例。
+// flyTo(target, options): 使相机飞行到指定的目标位置，并设置相应的动画效果和参数。
+// forceResize(): 强制刷新Viewer的大小和位置。
+// isDestroyed(): 判断Viewer是否已经销毁。
+// render(): Promise: 渲染3D场景并返回Promise对象，用于异步等待渲染结果。
+// resize(): undefined: 调整Viewer的大小和位置。
+// zoomTo(target, offset): 用于将视图缩放到指定的范围或尺寸的函数,target:定位到的实体、实体集合、数据源等。 offset：偏移量。
+
+```
+### Primitive
+```js
+// 主要由两部分组成：Geometry（几何结构） 和 Appearance（GLSL 顶点着色器、片段着色器和渲染状态）
+// Primitive 用的是 Geometry + Appearance，可以分别修改几何形状和外观。虽然有预定义的 Geometry，但是 Primitive API 提供的是更接近 WebGL 的接口，构造 Geometry 完全可以使用与 WebGL 十分接近的逻辑，传入顶点、法线等素材创建难以想象的形状。
+// 其具有以下优势：
+// 性能：绘制大量 Primitive 时，可以将其合并为单个 Geometry，减轻 CPU 负担，更好使用 GPU。
+// 灵活：Geometry 和 Appearance 解耦，两者可独立修改。
+// Entity 在数据量特别大的情况下性能比 Primitive 差。
+
+// https://www.cnblogs.com/onsummer/p/14059204.html
+// 注意viewer中的添加Primitive方法
+// viewer.scene.primitives.add(...)
+```
+
+### Entity
+```js
+// 更高级别的数据驱动 API，它使用一致性设计的、高级别对象来管理一组相关性的可视化对象，其底层也是使用的 primitive。
+// 多个类型的实体可以结合使用（如 billboard + label），但同一种实体不能存在多个（如多个 billboard 只能分别创建 entity 实例）
+
+// https://blog.csdn.net/appleshowc/article/details/123479194
+// 注意viewer中的添加Primitive方法
+// viewer.entities.add(...)
+```
+
+### Scene
+```js
+// Scene 包含 globe、primitives、groundprimitives 和 环境对象。
+// globe用来表示整个地球的表皮，地球表皮的绘制需要两样东西，地形高程和影像数据。Cesium的地形高程数据只能有一套，而影像数据可以由多层，多层可以相互叠加。
+// primitives、groundprimitives则是表示加入三维场景中的各种三维对象了。groundPrimitives用来表示贴地的三维对象。我们之前通过viewer.entities加入场景中的三维实体，大多会转化成primitives和groundPrimitives。 
+// 注意：尽量不要调用scene.primitives.removeAll()来清空所有三维场景对象，因为viewer.entities会在scene.primitives上偷偷挂接一些它管理的primitive对象。如果我们直接调用scene.primitives.removeAll()，相当于把viewer.entities也给删除了。
+// 环境对象: 就是一堆地球周边的环境对象了，比如天空盒（用来表示星空）、skyAtmosphere（用来表示大气）、sun（表示太阳）、moon（表示月亮）等等
+```
+
+### DataSource
+```js
+// DataSource有多种类型文件形式，如czml，GeoJson等，不同的文件类型只是为了不同方式的输入数据结构而已，本质上内部还是转换为Entity对象保存。
+// 开发中常用来天czml，GeoJson、kml等文件类型
+```
