@@ -1713,17 +1713,10 @@ svg-tags@^1.0.0:
   resolved "http://172.16.100.21:8081/repository/npm-all/svg-tags/-/svg-tags-1.0.0.tgz"
   integrity sha512-ovssysQTa+luh7A5Weu3Rta6FJlFBBbInjOh722LIt6klpU2/HtdUbszju/G4devcvk8PGt7FCLv5wftu3THUA==
 
-three.js@^0.77.1:
-  version "0.77.1"
-  resolved "http://172.16.100.21:8081/repository/npm-all/three.js/-/three.js-0.77.1.tgz#07858a8749e4b627a31083252a2d987776cca32a"
-  integrity sha512-lVMYlBXhhHlZtsF+cQdev6WCm2fSWs3I+A6Z63j6TBmkVXOYgdo9AUCRemfsw5mllqWx23VubJ5Qt8/uWKQpJA==
-  dependencies:
-    three "0.77.0"
-
-three@0.77.0:
-  version "0.77.0"
-  resolved "http://172.16.100.21:8081/repository/npm-all/three/-/three-0.77.0.tgz#8b0b1b00047689ceaa020d480a562ca60d87ff37"
-  integrity sha512-YWEp8ahs2l+6fAFVbanLVQoSBwVq5jDct3nZdBSHHXb5I/w5oy/LCMAzIOAguKWclRqcjR4W1BeP5QBnftGbpA==
+three@^0.160.1:
+  version "0.160.1"
+  resolved "http://172.16.100.21:8081/repository/npm-all/three/-/three-0.160.1.tgz#61fe2907312e8604b1f64187f58e047503847413"
+  integrity sha512-Bgl2wPJypDOZ1stAxwfWAcJ0WQf7QzlptsxkjYiURPz+n5k4RBDLsq+6f9Y75TYxn6aHLcWz+JNmwTOXWrQTBQ==
 
 to-fast-properties@^2.0.0:
   version "2.0.0"

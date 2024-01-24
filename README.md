@@ -376,3 +376,14 @@ const viewer= new Cesium.Viewer('mycesium',{
 // DataSource有多种类型文件形式，如czml，GeoJson等，不同的文件类型只是为了不同方式的输入数据结构而已，本质上内部还是转换为Entity对象保存。
 // 开发中常用来天czml，GeoJson、kml等文件类型
 ```
+
+### cesium + three.js
+
+
+### lookAtTransform
+```js
+// 设定一个局部的参考系，让相机始终朝着局部参考系的原点。
+// 接收两个参数 transform 与 offset
+// transform是相机参考的局部坐标系到世界坐标系的齐次坐标转换矩阵(Matrix4)，通过此4×4的矩阵，可以把局部坐标系的位置直接转换到世界坐标系中（包含旋转和平移，详细参考另一篇文章：Cesium中的相机—齐次坐标与坐标变换）。此局部坐标系一般为地面某点的“east-north-up”坐标系或者运行的卫星轨道坐标系，见下图中的o-XYZ坐标系。
+// offset有两种类型，此处只讲一种：Cartesian3，即笛卡尔坐标，表示相机在局部坐标系中的位置，如下图中的OP矢量即表示相机的offset参数。
+```

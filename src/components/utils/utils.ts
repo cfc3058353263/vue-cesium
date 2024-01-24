@@ -17,7 +17,6 @@ export const two_lng_lat_m = (startLngLat: Cesium.Cartographic, endLngLat: Cesiu
 // 世界坐标转经纬度（Cartesian3）-->WGS84坐标系
 export const cartesian3_to_lng_lat = (cartesian3: Cesium.Cartesian3) => {
     var cartographic = Cesium.Cartographic.fromCartesian(cartesian3);
-    console.log(cartographic)
     var lng = Cesium.Math.toDegrees(cartographic.longitude);
     var lat = Cesium.Math.toDegrees(cartographic.latitude);
     var height = cartographic.height;

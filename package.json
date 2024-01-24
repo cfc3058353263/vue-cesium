@@ -15,7 +15,7 @@
     "cesium-navigation-es6": "^3.0.8",
     "coordtransform": "^2.1.2",
     "element-plus": "^2.4.4",
-    "three.js": "^0.77.1",
+    "three": "^0.160.1",
     "vite-plugin-cesium": "^1.2.22",
     "vue": "^3.3.11",
     "vue-router": "^4.2.5"

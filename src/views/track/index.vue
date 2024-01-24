@@ -2,6 +2,10 @@
     <div ref="cesiumContainer" id="cesiumContainer">
         <div class="draw">
             <el-button type="primary" @click="playback">轨迹回放</el-button>
+            <el-button type="primary" @click="setPerspective(0)">第一视角</el-button>
+            <el-button type="primary" @click="setPerspective(1)">跟随视角</el-button>
+            <el-button type="primary" @click="setPerspective(2)">上帝视角</el-button>
+            <el-button type="primary" @click="setPerspective(3)">自由视角</el-button>
         </div>
     </div>
 </template>
@@ -34,33 +38,37 @@ const initMap = async () => {
         navigationHelpButton: false,
         //地图选择器
         baseLayerPicker: false,
-        // baseLayer: new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({
-        //     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-        //     maximumLevel: 18,
-        //     minimumLevel: 1,
-        //     credit: 'Amap'
-        // })),
     });
     viewer.value.scene.debugShowFramesPerSecound = true;
     //创建DataSource
     var datasource = new Cesium.CustomDataSource("enetiestestdata");
     viewer.value.dataSources.add(datasource)
-    // 相机飞入点
-    // viewer.value.camera.setView({
-    //     // destination: Cesium.Cartesian3.fromDegrees(119.76426786809103, 36.142744517915986, 2000),
-    //     destination: Cesium.Cartesian3.fromDegrees(-73.97198, 40.7761, 2000),
-    //     orientation: {
-    //         // 指向
-    //         heading: Cesium.Math.toRadians(0.0),
-    //         // 视角
-    //         pitch: Cesium.Math.toRadians(-90),
-    //         roll: 0.0,
-    //     },
-    // });
 };
 
-const playback = ()=>{
-    track.sampleHeights();
+const playback = async () => {
+    const lnglat = [
+        [
+            113.06395692918217,
+            22.646103761101813,
+            7.893947268275958
+        ],
+        [
+            113.06318174241878,
+            22.646198467234374,
+            6.220578897300639
+        ],
+        [
+            113.0632511863859,
+            22.646465666216077,
+            26.25861487218874
+        ]
+    ]
+    const clampedCartesians = await track.createRoute(lnglat)
+    await track.craterAnimation(clampedCartesians, 'http://127.0.0.1:8888/model/xiaofangche.gltf');
+}
+
+const setPerspective = (value: number) => {
+    track.perspective = value
 }
 
 let track: Track
@@ -75,7 +83,6 @@ onMounted(async () => {
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
     track = new Track(viewer.value, handler)
     track.handlerLeftClick()
-    // track.craterDataSource()
     model.value = new Model(viewer.value, handler)
     tileset.value = await model.value.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
     model.value.changeHeight(tileset.value, -65)

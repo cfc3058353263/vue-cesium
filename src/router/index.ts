@@ -173,6 +173,19 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
         ],
     },
+    {
+        path: '/three',
+        component: Layout,
+        redirect: '/three',
+        children: [
+            {
+                path: '/three',
+                component: () => import('@/views/three/index.vue'),
+                name: 'three',
+                meta: { title: '3d模型', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
 ];
 
 const router = createRouter({
