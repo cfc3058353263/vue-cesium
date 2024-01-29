@@ -7,6 +7,7 @@ import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
 import util from "@/components/HeatMap/util";
 import Heatmap3d from "@/components/HeatMap/heatmap3d";
+import * as turf from '@turf/turf'
 
 
 let viewer = ref()
@@ -88,92 +89,92 @@ function createPrimitive() {
 
 // generateGeometryInstance方法我们要插入点。
 function generateGeometryInstance() {
-    // 宽 高 左
-    const dWidth = bounds[2] - bounds[0], dHeight = bounds[3] - bounds[1], left = bounds[0], bottom = bounds[1]
-    const dx = 0.005, dy = 0.005, h = 0, dh = 100 // 这里配置了插入间隔和起始高度、高度间隔
-    let r = Math.floor(dWidth / dx),
-        l = Math.floor(dHeight / dy)
-      console.log(r)
-      console.log(l)
-    const grids = []
-    for (let i = 0; i < l + 1; i++) {
-        let row = []
-        for (let u = 0; u < r + 1; u++) {
-            let x = left + (u == r ? dWidth : u * dx), y = bottom + (i == l ? dHeight : i * dy)
-            let screen = {
-                x: Math.round((x - left) / dWidth * width),
-                y: height - Math.round((y - bottom) / dHeight * height),
-            }
-            let v = heatmap.getValueAt(screen)
-            let color = heatmap._renderer.ctx.getImageData(screen.x, screen.y, 1, 1).data;
-            row.push([x, y, h + v * dh, color.map(c => c / 255), [(x - left) / dWidth, (y - bottom) / dHeight]])
-        }
-        grids.push(row)
+  // 宽 高 左
+  const dWidth = bounds[2] - bounds[0], dHeight = bounds[3] - bounds[1], left = bounds[0], bottom = bounds[1]
+  const dx = 0.005, dy = 0.005, h = 0, dh = 100 // 这里配置了插入间隔和起始高度、高度间隔
+  let r = Math.floor(dWidth / dx),
+    l = Math.floor(dHeight / dy)
+  console.log(r)
+  console.log(l)
+  const grids = []
+  for (let i = 0; i < l + 1; i++) {
+    let row = []
+    for (let u = 0; u < r + 1; u++) {
+      let x = left + (u == r ? dWidth : u * dx), y = bottom + (i == l ? dHeight : i * dy)
+      let screen = {
+        x: Math.round((x - left) / dWidth * width),
+        y: height - Math.round((y - bottom) / dHeight * height),
+      }
+      let v = heatmap.getValueAt(screen)
+      let color = heatmap._renderer.ctx.getImageData(screen.x, screen.y, 1, 1).data;
+      row.push([x, y, h + v * dh, color.map(c => c / 255), [(x - left) / dWidth, (y - bottom) / dHeight]])
     }
-    console.log('grids',grids)
-    const wgs84Positions = []
-    const indices = []
-    const colors = []
-    const sts = []
-    let vtxCursor = 0
-    let idxCursor = 0
-    for (let i = 0; i < l; i++) {
-        for (let u = 0; u < r; u++) {
-            let p1 = grids[i][u]
-            let p2 = grids[i][u + 1]
-            let p3 = grids[i + 1][u + 1]
-            let p4 = grids[i + 1][u]
+    grids.push(row)
+  }
+  console.log('grids', grids)
+  const wgs84Positions = []
+  const indices = []
+  const colors = []
+  const sts = []
+  let vtxCursor = 0
+  let idxCursor = 0
+  for (let i = 0; i < l; i++) {
+    for (let u = 0; u < r; u++) {
+      let p1 = grids[i][u]
+      let p2 = grids[i][u + 1]
+      let p3 = grids[i + 1][u + 1]
+      let p4 = grids[i + 1][u]
 
-            addVertices(p1, wgs84Positions, colors, sts)
-            addVertices(p2, wgs84Positions, colors, sts)
-            addVertices(p3, wgs84Positions, colors, sts)
-            addVertices(p1, wgs84Positions, colors, sts)
-            addVertices(p3, wgs84Positions, colors, sts)
-            addVertices(p4, wgs84Positions, colors, sts)
-            indices.push(idxCursor + 0, idxCursor + 1, idxCursor + 2, idxCursor + 3, idxCursor + 4, idxCursor + 5)
-            idxCursor += 6
-        }
+      addVertices(p1, wgs84Positions, colors, sts)
+      addVertices(p2, wgs84Positions, colors, sts)
+      addVertices(p3, wgs84Positions, colors, sts)
+      addVertices(p1, wgs84Positions, colors, sts)
+      addVertices(p3, wgs84Positions, colors, sts)
+      addVertices(p4, wgs84Positions, colors, sts)
+      indices.push(idxCursor + 0, idxCursor + 1, idxCursor + 2, idxCursor + 3, idxCursor + 4, idxCursor + 5)
+      idxCursor += 6
     }
-    return new Cesium.GeometryInstance({
-    	// computeNormal会自动帮我们计算法向量
-        geometry: Cesium.GeometryPipeline.computeNormal(generateGeometry(wgs84Positions, colors, indices, sts)),
-    })
+  }
+  return new Cesium.GeometryInstance({
+    // computeNormal会自动帮我们计算法向量
+    geometry: Cesium.GeometryPipeline.computeNormal(generateGeometry(wgs84Positions, colors, indices, sts)),
+  })
 }
 // 把信息写入点，可以在顶点着色器中取到
 function addVertices(p, positions, colors, sts) {
-    const c3Position = Cesium.Cartesian3.fromDegrees(p[0], p[1], p[2])
-    positions.push(c3Position.x, c3Position.y, c3Position.z)
-    colors.push(p[3][0], p[3][1], p[3][2], p[3][3])
-    sts.push(p[4][0], p[4][1])
+  const c3Position = Cesium.Cartesian3.fromDegrees(p[0], p[1], p[2])
+  positions.push(c3Position.x, c3Position.y, c3Position.z)
+  colors.push(p[3][0], p[3][1], p[3][2], p[3][3])
+  sts.push(p[4][0], p[4][1])
 }
 function generateGeometry(positions, colors, indices, sts) {
-    let attributes = new Cesium.GeometryAttributes({
-        position: new Cesium.GeometryAttribute({
-            componentDatatype: Cesium.ComponentDatatype.DOUBLE,
-            componentsPerAttribute: 3,
-            values: new Float64Array(positions),
-        }),
-        color: new Cesium.GeometryAttribute({
-            componentDatatype: Cesium.ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            values: new Float32Array(colors),
-        }),
-        st: new Cesium.GeometryAttribute({
-            componentDatatype: Cesium.ComponentDatatype.FLOAT,
-            componentsPerAttribute: 2,
-            values: new Float32Array(sts),
-        }),
-    })
-    // 计算包围球
-    const boundingSphere = Cesium.BoundingSphere.fromVertices(positions, new Cesium.Cartesian3(0.0, 0.0, 0.0), 3)
-    //
-    const geometry = new Cesium.Geometry({
-        attributes: attributes,
-        indices: indices,
-        primitiveType: Cesium.PrimitiveType.TRIANGLES,
-        boundingSphere: boundingSphere,
-    })
-    return geometry
+  let attributes = new Cesium.GeometryAttributes({
+    position: new Cesium.GeometryAttribute({
+      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+      componentsPerAttribute: 3,
+      values: new Float64Array(positions),
+    }),
+    color: new Cesium.GeometryAttribute({
+      componentDatatype: Cesium.ComponentDatatype.FLOAT,
+      componentsPerAttribute: 4,
+      values: new Float32Array(colors),
+    }),
+    st: new Cesium.GeometryAttribute({
+      componentDatatype: Cesium.ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: new Float32Array(sts),
+    }),
+  })
+  // 计算包围球
+  const boundingSphere = Cesium.BoundingSphere.fromVertices(positions, new Cesium.Cartesian3(0.0, 0.0, 0.0), 3)
+  //
+  const geometry = new Cesium.Geometry({
+    attributes: attributes,
+    indices: indices,
+    primitiveType: Cesium.PrimitiveType.TRIANGLES,
+    boundingSphere: boundingSphere,
+  })
+  return geometry
 }
 
 const initMap = () => {
@@ -238,6 +239,27 @@ const creat3dHeatmap1 = () => {
 onMounted(() => {
   initMap()
   creat3dHeatmap1()
+
+  // turf 测试数据
+  var bbox = [-95, 30, -85, 40];
+  var cellSide = 50;
+  var options = { units: 'miles' };
+
+  var triangleGrid = turf.triangleGrid(bbox, cellSide, options);
+  const addGeoJsonData = () => {
+    const sourcePromise = Cesium.GeoJsonDataSource.load(triangleGrid, {
+      stroke: Cesium.Color.WHITE, //边界颜色
+      fill: Cesium.Color.BLUE.withAlpha(0.1), //注意：颜色必须大写，即不能为blue，区域颜色
+      strokeWidth: 5, //折线和多边形轮廓的宽度
+    });
+    sourcePromise.then(function (dataSource) {
+      viewer.value.dataSources.add(dataSource);
+      viewer.value.flyTo(dataSource);
+    });
+  }
+  addGeoJsonData()
+  var point = turf.point([-75.343, 39.984]);
+  console.log(point);
 });
 </script>
 

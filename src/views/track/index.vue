@@ -13,8 +13,8 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
-import { Track } from "@/components/Track/Track.ts"
-import { Model } from "@/components/Model/Model.ts"
+import { Track } from "@/components/Track/Track";
+import { Model } from "@/components/Model/Model";
 // 当前组件的实例
 const cesiumContainer = ref();
 // 创建Cesium Viewer
@@ -42,36 +42,28 @@ const initMap = async () => {
     viewer.value.scene.debugShowFramesPerSecound = true;
     //创建DataSource
     var datasource = new Cesium.CustomDataSource("enetiestestdata");
-    viewer.value.dataSources.add(datasource)
+    viewer.value.dataSources.add(datasource);
 };
 
 const playback = async () => {
     const lnglat = [
-        [
-            113.06395692918217,
-            22.646103761101813,
-            7.893947268275958
-        ],
-        [
-            113.06318174241878,
-            22.646198467234374,
-            6.220578897300639
-        ],
-        [
-            113.0632511863859,
-            22.646465666216077,
-            26.25861487218874
-        ]
-    ]
-    const clampedCartesians = await track.createRoute(lnglat)
-    await track.craterAnimation(clampedCartesians, 'http://127.0.0.1:8888/model/xiaofangche.gltf');
-}
+        [113.06395692918217, 22.646103761101813, 7.893947268275958],
+        [113.06220403380105, 22.64630175872956, 5.208961613755903],
+        [113.0621002073448, 22.64578025897571, 5.405481321397263],
+        [113.06256240798237, 22.645717154355566, 6.089849200475163],
+    ];
+    const clampedCartesians = await track.createRoute(lnglat, 10);
+    await track.craterAnimation(
+        clampedCartesians,
+        "http://127.0.0.1:8888/model/xiaofangche.gltf"
+    );
+};
 
 const setPerspective = (value: number) => {
-    track.perspective = value
-}
+    track.perspective = value;
+};
 
-let track: Track
+let track: Track;
 let model = ref();
 let tileset = ref<Cesium.Cesium3DTileset>();
 onMounted(async () => {
@@ -80,13 +72,14 @@ onMounted(async () => {
     viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
     // 开启地形深度检测
     viewer.value.scene.globe.depthTestAgainstTerrain = true;
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
-    track = new Track(viewer.value, handler)
-    track.handlerLeftClick()
-    model.value = new Model(viewer.value, handler)
-    tileset.value = await model.value.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
-    model.value.changeHeight(tileset.value, -65)
-
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
+    track = new Track(viewer.value, handler);
+    track.handlerLeftClick();
+    model.value = new Model(viewer.value, handler);
+    tileset.value = await model.value.add3dTileset(
+        "http://127.0.0.1:8888/model/b3dm/tileset.json"
+    );
+    model.value.changeHeight(tileset.value, -65);
 });
 </script>
   
@@ -99,7 +92,6 @@ onMounted(async () => {
         z-index: 999;
         left: 30px;
         top: 30px;
-
     }
 }
 </style>

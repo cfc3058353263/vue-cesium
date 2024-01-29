@@ -207,9 +207,13 @@ var height = cartographic.height;
 
 ### 相机
 ```js
-https://blog.csdn.net/Raccon_/article/details/127281362
+heading：默认方向为正北，正角度为向东旋转，即水平旋转，也叫偏航角。
+pitch：默认旋转角度为一90,即朝向地面，正角度为平面之上，负角度为平面之下，即上下旋转，也叫俯仰角。
+roll：默认旋转角度为0，左右旋转.正角度向右旋转，负角度向左旋转，也叫翻滚角。
 
-https://blog.csdn.net/ljy1998dsb/article/details/124072373?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-4-124072373-blog-132210829.235^v40^pc_relevant_3m_sort_dl_base3&spm=1001.2101.3001.4242.3&utm_relevant_index=7
+// https://blog.csdn.net/Raccon_/article/details/127281362
+
+// https://blog.csdn.net/ljy1998dsb/article/details/124072373?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-4-124072373-blog-132210829.235^v40^pc_relevant_3m_sort_dl_base3&spm=1001.2101.3001.4242.3&utm_relevant_index=7
 ```
 
 ### 二维场景与三维厂家切换
@@ -386,4 +390,18 @@ const viewer= new Cesium.Viewer('mycesium',{
 // 接收两个参数 transform 与 offset
 // transform是相机参考的局部坐标系到世界坐标系的齐次坐标转换矩阵(Matrix4)，通过此4×4的矩阵，可以把局部坐标系的位置直接转换到世界坐标系中（包含旋转和平移，详细参考另一篇文章：Cesium中的相机—齐次坐标与坐标变换）。此局部坐标系一般为地面某点的“east-north-up”坐标系或者运行的卫星轨道坐标系，见下图中的o-XYZ坐标系。
 // offset有两种类型，此处只讲一种：Cartesian3，即笛卡尔坐标，表示相机在局部坐标系中的位置，如下图中的OP矢量即表示相机的offset参数。
+```
+
+### 初始化加载
+```js
+// 1. 去掉cesium的log
+viewer.value.cesiumWidget.creditContainer.style.display = "none";
+// 1. 背景设置
+viewer.scene.skyBox.show = false; //去掉天空盒子
+viewer.value.scene.backgroundColor = new Cesium.Color(255, 255, 255, 0); //设置场景背景色，便于显示自定的背景
+viewer.value.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0); //修改地邱球体背景透明
+viewer.value.scene.moon.show = false; // 将月球设置为不显示
+viewer.value.scene.skyAtmosphere.show = false; // 设置大气为不显示
+viewer.value.scene.fog.enable = false; //设置雾为不显示
+// 移除双击监听事件
 ```

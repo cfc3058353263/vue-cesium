@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
-import { Model } from '@/components/Model/Model.ts'
+import { Model } from '@/components/Model/Model'
 import { Polygon } from '@/components/Polygon/polyg.ts'
 
 import modelDrawer from './components/modelDrawer.vue'
@@ -37,12 +37,18 @@ const initMap = async () => {
         fullscreenButton: false,
         infoBox: false,
         selectionIndicator: false,
+        // 添加地形服务
+        terrain: Cesium.Terrain.fromWorldTerrain()
     });
     viewer.value.scene.debugShowFramesPerSecound = true;
     viewer.value.scene.moon.show = false;
     viewer.value.scene.fog.enabled = false;
     viewer.value.scene.sun.show = false;
     viewer.value.scene.skyBox.show = false;
+    // 如果给定的模型高度是高于地面的，则可以关闭地形
+    // viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    // 开启地形深度检测
+    viewer.value.scene.globe.depthTestAgainstTerrain = true;
 };
 // 绘制线
 const openDraw = () => {
@@ -67,10 +73,7 @@ let polygon: Polygon;
 let drawerModel = ref()
 // 模型加载
 const loadModel = async () => {
-    // 如果给定的模型高度是高于地面的，则可以关闭地形
-    viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-    // 开启地形深度检测
-    viewer.value.scene.globe.depthTestAgainstTerrain = true;
+
     tileset.value = await model.value.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
     model.value.handlerLeftClick()
     model.value.handlerMouseMove()

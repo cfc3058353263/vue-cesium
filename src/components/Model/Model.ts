@@ -177,7 +177,7 @@ export class Model {
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     }
-    // 鼠标移动事件
+    // 鼠标移动事件 触发模型单体化
     handlerMouseMove = () => {
         this.handler.setInputAction((event: any) => {
             const pickedObject = this.viewer.scene.pick(event.endPosition);

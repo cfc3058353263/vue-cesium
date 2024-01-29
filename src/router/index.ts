@@ -186,6 +186,32 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
         ],
     },
+    {
+        path: '/primitive',
+        component: Layout,
+        redirect: '/primitive',
+        children: [
+            {
+                path: '/primitive',
+                component: () => import('@/views/primitive/index.vue'),
+                name: 'primitive',
+                meta: { title: 'primitive', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
+    {
+        path: '/ol-cesium',
+        component: Layout,
+        redirect: '/ol-cesium',
+        children: [
+            {
+                path: '/ol-cesium',
+                component: () => import('@/views/ol-cesium/index.vue'),
+                name: 'ol-cesium',
+                meta: { title: 'ol二维三维', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
 ];
 
 const router = createRouter({

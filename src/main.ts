@@ -8,6 +8,7 @@ import '@/assets/styles/index.scss'; // global css
 
 /**引入cesium */
 import * as Cesium from "cesium";
+window.Cesium = Cesium
 import "cesium/Source/Widgets/widgets.css";
 const app = createApp(App)
 
