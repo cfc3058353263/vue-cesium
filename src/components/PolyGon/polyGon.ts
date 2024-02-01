@@ -1,5 +1,8 @@
 import * as Cesium from 'cesium';
 import { cartesian3_to_lng_lat } from '@/components/utils/utils';
+import circle_gray from '@/assets/drawImage/circle_gray.png';
+import circle_red from '@/assets/drawImage/circle_red.png';
+
 // 当前选中的图形id
 export class Polygon {
     viewer: any;
@@ -72,6 +75,7 @@ export class Polygon {
         name: string,
         cartesian3: Cesium.Cartesian3,
         type: string = 'draw',
+        image: string = circle_red,
         color: string = '#fc3d4a',
         outlineColor: string = '#fc3d4a',
         pixelSize: number = 20
@@ -79,11 +83,13 @@ export class Polygon {
         const entityPoint = this.viewer.entities.add({
             position: cartesian3,
             name: name,
-            point: {
-                color: Cesium.Color.fromCssColorString(color),
-                outlineColor: Cesium.Color.fromCssColorString(outlineColor),
+            billboard: {
+                image: image,
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                pixelSize: pixelSize,
+                scale: 1.2
+                // color: Cesium.Color.fromCssColorString(color),
+                // outlineColor: Cesium.Color.fromCssColorString(outlineColor),
+                // pixelSize: pixelSize,
             },
             type: type,
         });
@@ -124,7 +130,7 @@ export class Polygon {
                     return new Cesium.PolygonHierarchy(cartesian3Arr);
                 }, false),
                 material: Cesium.Color.fromCssColorString('#ffffff80'),
-                // classificationType: Cesium.ClassificationType.BOTH,
+                classificationType: Cesium.ClassificationType.BOTH,
                 // extrudedHeight: 0,
                 // height: 0,
             },
@@ -264,7 +270,7 @@ export class Polygon {
                                     'point_center_demo_name',
                                     cartesian3,
                                     'center_edit',
-                                    '#fff'
+                                    circle_gray
                                 );
                                 this.pointAndLineEntity.demoPointArr.push(point);
                             }
@@ -294,7 +300,9 @@ export class Polygon {
                             (item: any) => this.nowEditPoint.id.id === item.id
                         );
                         const nowEditPointPosition = this.nowEditPoint!.id.position._value;
-                        this.nowEditPoint.id.point.color = Cesium.Color.fromCssColorString('#fc3d4a');
+                        // this.nowEditPoint.id.point.color = Cesium.Color.fromCssColorString('#fc3d4a');
+                        this.nowEditPoint.id.billboard.image._value = circle_red;
+                        console.log('this.nowEditPoint', this.nowEditPoint);
                         this.nowEditPoint.id.type = 'edit';
                         // 右侧
                         let pointR = this.pointAndLineEntity.demoPointArr[index + 1].position._value;
@@ -304,7 +312,7 @@ export class Polygon {
                             0.5,
                             new Cesium.Cartesian3()
                         );
-                        pointR = this.drawPoint('point_center_demo_name', pointR, 'center_edit', '#fff');
+                        pointR = this.drawPoint('point_center_demo_name', pointR, 'center_edit', circle_gray);
                         this.pointAndLineEntity.demoPointArr.splice(index + 1, 0, pointR);
                         // 左侧
                         let pointL = this.pointAndLineEntity.demoPointArr[index - 1].position._value;
@@ -314,7 +322,7 @@ export class Polygon {
                             0.5,
                             new Cesium.Cartesian3()
                         );
-                        pointL = this.drawPoint('point_center_demo_name', pointL, 'center_edit', '#fff');
+                        pointL = this.drawPoint('point_center_demo_name', pointL, 'center_edit', circle_gray);
                         this.pointAndLineEntity.demoPointArr.splice(index, 0, pointL);
                         // 清空数据
                         this.nowEditPoint = null;

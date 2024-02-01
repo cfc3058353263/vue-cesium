@@ -123,7 +123,6 @@ const handleSubmit = () => {
 }
 onMounted(async () => {
     initMap()
-    viewer.value.scene.globe.depthTestAgainstTerrain = false;
     // 监听cesiumContainer的鼠标事件
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
     // 创建polyGon
