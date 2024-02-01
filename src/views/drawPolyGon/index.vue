@@ -2,8 +2,11 @@
     <div ref="cesiumContainer" id="cesiumContainer">
         <div class="draw" type="card">
             <el-button type="primary" size="small" @click="drawPolygon()">开始绘制</el-button>
+            <el-button type="primary" size="small" @click="editPolygon()">开启编辑</el-button>
+            <el-button type="primary" size="small" @click="endPolygonEdit()">结束编辑</el-button>
+            <el-button type="primary" size="small" @click="getPolygonInfo()">获取数据</el-button>
         </div>
-        <el-drawer v-model="drawer" title="I am the title" :with-header="false" :modal="false" modal-class="drawerModal">
+        <!-- <el-drawer v-model="drawer" title="I am the title" :with-header="false" :modal="false" modal-class="drawerModal">
             <el-form ref="ruleFormRef" :model="form" status-icon label-width="120px" class="demo-ruleForm">
                 <el-form-item label="实体名称" prop="name">
                     <el-input v-model="form.name" autocomplete="off" @change="handleChangeName" />
@@ -27,14 +30,16 @@
                     <el-button @click="">重置</el-button>
                 </el-form-item>
             </el-form>
-        </el-drawer>
+        </el-drawer> -->
     </div>
 </template>
    
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref, reactive, toRefs } from "vue";
-import { PolyGon, drawer, form } from '@/components/Polygon/PolyGon.ts';
+import { Polygon } from '@/components/Polygon/polygon';
+import { Model } from '@/components/Model/Model'
+
 import cache from '@/plugins/cache.ts'
 const { local } = cache
 
@@ -60,10 +65,12 @@ const initMap = async () => {
         fullscreenButton: false,
         infoBox: false,
         selectionIndicator: false,
+        // 添加地形服务
+        terrain: Cesium.Terrain.fromWorldTerrain()
     });
     // 相机飞入点
     viewer.value.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(-73.97198, 40.77610, 2000),
+        destination: Cesium.Cartesian3.fromDegrees(-75.60217330403601, 40.04102882709425, 2000),
         orientation: {
             // 指向
             heading: Cesium.Math.toRadians(0.0),
@@ -74,50 +81,57 @@ const initMap = async () => {
     });
 };
 // polyGon实例
-let polyGon: any
+let polygon: any
 // 绘制多边形
 const drawPolygon = () => {
-    polyGon.draw()
+    polygon.draw()
 }
+// 编辑多边形
+const editPolygon = () => {
+    polygon.edit()
+}
+const endPolygonEdit = () => {
+    polygon.endEdit()
+}
+// 获取数据
+const getPolygonInfo = () => {
+    const data = polygon.getPolygonData()
+    console.log(data)
+}
+// 添加model
+let model: Model
 
 // 修改名称
 const handleChangeName = () => {
-    polyGon.setName()
+    polygon.setName()
 }
 // 修改高度
 const handleChangeHeight = () => {
-    polyGon.drawPolyhedron()
+    polygon.drawPolyhedron()
 }
 //  修改颜色
 const handleChangeColor = () => {
-    polyGon.setColor()
+    polygon.setColor()
 }
 // 显示隐藏
 const handleChangeShow = () => {
-    polyGon.setShow()
+    polygon.setShow()
 }
 // 保存
 const handleSubmit = () => {
-    polyGon.save()
+    polygon.save()
 }
 onMounted(async () => {
     initMap()
-    // 如果给定的模型高度是高于地面的，则可以关闭地形
-    // viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-    // 开启地形深度检测
-    // viewer.value.scene.globe.depthTestAgainstTerrain = true;
+    viewer.value.scene.globe.depthTestAgainstTerrain = false;
     // 监听cesiumContainer的鼠标事件
-    const handle = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
-
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
     // 创建polyGon
-    polyGon = new PolyGon(viewer.value, handle)
-    polyGon.handlerLeftClick()
-    polyGon.handlerMouseMove()
-    polyGon.handerRightClick()
-    // if (local.getJSON('polygon')) {
-    //     const data = JSON.parse(local.getJSON('polygon'))
-    //     data && polyGon.drawDatapolygon(data)
-    // }
+    polygon = new Polygon(viewer.value, handler)
+    // 创建model
+    model = new Model(viewer.value, handler)
+    const tileset = await model.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
+    model.handlerLeftClick()
 });
 
 </script>

@@ -15,7 +15,7 @@
 import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
 import { Model } from '@/components/Model/Model'
-import { Polygon } from '@/components/Polygon/polyg.ts'
+import { Polygon } from '@/components/Polygon/polyg'
 
 import modelDrawer from './components/modelDrawer.vue'
 import polygonDrawer from './components/polygonDrawer.vue'

@@ -38,3 +38,8 @@ export const get_clientCenter_cartesian2 = (viewer: Cesium.Viewer) => {
     const cartesian3 = viewer.scene.camera.pickEllipsoid(cartesian2, viewer.scene.globe.ellipsoid);
     return { cartesian2, cartesian3 };
 };
+
+// 计算两个笛卡尔坐标的中心点坐标
+export const get_two_center = (point1, point2) => {
+
+};

@@ -1,5 +1,5 @@
 import * as Cesium from "cesium";
-import { cartesian3_to_lng_lat } from '@/components/utils/utils.ts'
+import { cartesian3_to_lng_lat } from '@/components/utils/utils'
 
 // 图形储存数据
 const polygonList: Array<{ id: string, name: string; data: any; show: boolean; color: string, height: number }> = []

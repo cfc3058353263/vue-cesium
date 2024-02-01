@@ -212,6 +212,19 @@ export const constantRoutes: RouteRecordRaw[] = [
             },
         ],
     },
+    {
+        path: '/drawWall',
+        component: Layout,
+        redirect: '/drawWall',
+        children: [
+            {
+                path: '/drawWall',
+                component: () => import('@/views/drawWall/index.vue'),
+                name: 'drawWall',
+                meta: { title: '立体墙', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
 ];
 
 const router = createRouter({

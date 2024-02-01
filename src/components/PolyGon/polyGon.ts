@@ -1,395 +1,449 @@
-import * as Cesium from "cesium";
-import { reactive, toRefs } from "vue";
-import cache from '@/plugins/cache.ts'
-const { local } = cache
-const data = reactive({
-    drawer: false, // 抽屉
-    form: {
-        id: '',
-        name: '',
-        show: true,
-        height: 0,
-        color: '#ffffff80'
-    }
-})
-export const { drawer, form } = toRefs(data)
-// 图形储存数据
-const polygonList: Array<{ id: string, name: string; data: any; show: boolean; color: string, height: number }> = []
+import * as Cesium from 'cesium';
+import { cartesian3_to_lng_lat } from '@/components/utils/utils';
 // 当前选中的图形id
-let polygonId: string | null = null
-// 储存绘制节点的信息 使用的是cartesain3的坐标格式
-let pointArr: any[] = []
-// 当前点位的数据
-let nowPoint: any[] = []
-// 当前多边形中的点和线实体集合
-let pointAndLineEntity: any = {
-    pointEntityArr: [], // 多边形中点的实体集合
-    lineEntityArr: [],// 多边形中线的实体集合
-    demoLineEntityArr: [], // 绘制移动时线的实体集合
-}
-// 当前选择的编辑点
-let nowEditPoint: any[] = []
-// 是否开始绘制
-let isDrawLine = false
-// 是否形成面
-let isDrawPolyGon = false
-
-// uuid生成
-const guid = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        const r = (Math.random() * 16) | 0,
-            v = c == 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-    });
-};
-
-//  
-export class PolyGon {
-    viewer: any; // cesium 实例
-    handler: any; // cesium 鼠标监听事件
-    constructor(viewer: any, handler: any) {
-        this.viewer = viewer;
-        this.handler = handler
+export class Polygon {
+    viewer: any;
+    handler: any;
+    isDrawLine: boolean;
+    isEditLine: boolean;
+    pointArr: Cesium.Cartesian3[];
+    nowPoint: Cesium.Cartesian3 | null;
+    pointAndLineEntity: any;
+    lineId: string | null;
+    polygonId: string | null;
+    lineInfo: any;
+    nowEditPoint: any;
+    leftCenterPoint: any;
+    rightCenterPoint: any;
+    constructor(viewer: Cesium.Viewer, handler: Cesium.ScreenSpaceEventHandler) {
+        this.viewer = viewer; // cesium 实例
+        this.handler = handler; // cesium 鼠标监听事件
+        this.isDrawLine = false; // 是否开启绘制
+        this.isEditLine = false; // 是否开启绘制
+        this.pointArr = []; // 点的储存数据
+        this.nowPoint = null; // 当前点的数据
+        this.lineId = null; // 当前选中的线的id
+        this.polygonId = null; // 当前选中的面的id
+        this.lineInfo = null; // 当前线的基本信息
+        this.nowEditPoint = null; //编辑时选中的点实例
+        this.pointAndLineEntity = {
+            demoLineArr: [], // 辅助线实体的储存数据
+            demoPointArr: [], // 辅助点实体的储存数据
+            lineArr: [], // 线的储存数据
+        };
+        // 编辑点附近的生成的中心点
+        this.leftCenterPoint = null; // 左侧中心点
+        this.rightCenterPoint = null; // 右侧中心点
     }
     /**
      * 删除点与线实体
      * @param name 判断删除的实体类型
      */
-    delDemoEntity = (name: string) => {
-        // 绘制点
-        name == 'point_name' && pointAndLineEntity.pointEntityArr.forEach((item: any) => {
-            this.viewer.entities.remove(item)
-        })
-        // 绘制线
-        name == 'line_name' && pointAndLineEntity.lineEntityArr.forEach((item: any) => {
-            this.viewer.entities.remove(item)
-        })
-        // 移动时的线
-        name == 'line_demo_name' && pointAndLineEntity.demoLineEntityArr.forEach((item: any) => {
-            this.viewer.entities.remove(item)
-        })
-        // 编辑点
-        name == 'polygon_point' && pointAndLineEntity.pointEntityArr.forEach((item: any) => {
-            this.viewer.entities.remove(item)
-        })
-    }
-    /**
-     * 将屏幕坐标转换为经纬度坐标
-     * @param cartesian2 
-     * @returns 
-     */
-    getLonOrLat = (cartesian2: any) => {
-        var cartesian = this.viewer.scene.globe.pick(this.viewer.camera.getPickRay(cartesian2), this.viewer.scene);
-        let cartorgraphic = Cesium.Cartographic.fromCartesian(cartesian);
-        let lon = Cesium.Math.toDegrees(cartorgraphic.longitude);  // 经度
-        let lat = Cesium.Math.toDegrees(cartorgraphic.latitude);   // 纬度  
-        return {
-            longitude: lon,
-            latitude: lat
+    delEntity = (name: string) => {
+        switch (name) {
+            // 删除辅助点
+            case 'point_demo_name':
+                this.pointAndLineEntity.demoPointArr.map((item: any) => {
+                    this.viewer.entities.remove(item);
+                });
+                break;
+            // 删除
+            case 'line_name':
+                this.pointAndLineEntity.lineArr.map((item: any) => {
+                    this.viewer.entities.remove(item);
+                });
+                break;
+            // 删除移动时的绘制线
+            case 'line_demo_name':
+                this.pointAndLineEntity.demoLineArr.map((item: any) => {
+                    this.viewer.entities.remove(item);
+                });
+                break;
+            default:
+                break;
         }
-    }
+    };
     /**
      * 点击绘制点,并返回点的实例
-     * @param lonAndLat 
-     * @returns 
+     * @param lonAndLat
+     * @returns
      */
-    drawPoint = (cartesain3: number[]) => {
+    drawPoint = (
+        name: string,
+        cartesian3: Cesium.Cartesian3,
+        type: string = 'draw',
+        color: string = '#fc3d4a',
+        outlineColor: string = '#fc3d4a',
+        pixelSize: number = 20
+    ) => {
         const entityPoint = this.viewer.entities.add({
-            position: cartesain3,
-            name: 'point_name',
+            position: cartesian3,
+            name: name,
             point: {
-                color: Cesium.Color.fromCssColorString('#fc3d4a'),
-                outlineColor: Cesium.Color.fromCssColorString('#fc3d4a'),
-                pixelSize: 11
+                color: Cesium.Color.fromCssColorString(color),
+                outlineColor: Cesium.Color.fromCssColorString(outlineColor),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                pixelSize: pixelSize,
             },
-        })
-        return entityPoint
-    }
+            type: type,
+        });
+        return entityPoint;
+    };
     /**
      * 绘制线
      * @param name 线条名称
      * @param lineArr 绘制线所需要的经纬度
-     * @returns 
+     * @returns
      */
-    drawLine = (name: string, lineArr: any[]) => {
+    drawLine = (name: string, cartesian3Arr: any[]) => {
         const entityLine = this.viewer.entities.add({
             name: name,
             polyline: {
-                positions: new Cesium.CallbackProperty(() => lineArr, false),
+                positions: new Cesium.CallbackProperty(() => cartesian3Arr, false),
                 width: 5,
                 material: Cesium.Color.fromCssColorString('#fcc31f'),
-            }
-        })
-        return entityLine
-    }
+                clampToGround: true,
+            },
+            type: 'line',
+        });
+        return entityLine;
+    };
     /**
-    * 绘制面
-    * @param lonAndLat 经纬度
-    */
-    drawPolyGon = (lonAndLat: any[]) => {
-        const uuid = guid()
+     * 绘制面
+     * @param lonAndLat 经纬度
+     */
+    drawPolygon = (name: string = '', cartesian3Arr: any[]) => {
         // 绘制图形
         this.viewer.entities.add({
-            id: uuid,
-            name: "",
+            name: name,
             polygon: {
-                clampToGround: true, //开启贴地
-                // 定义多边形及其孔的线性环的层次结构
-                // hierarchy: new Cesium.PolygonHierarchy(
-                //     // Cesium.Cartesian3.fromDegreesArray 根据经纬度返回三维笛卡尔坐标的数组
-                //     Cesium.Cartesian3.fromDegreesArray(lonLats(lonAndLat))
-                // ),
+                // hierarchy: {
+                //     positions: cartesian3Arr
+                // },
                 hierarchy: new Cesium.CallbackProperty(() => {
-                    return new Cesium.PolygonHierarchy(lonAndLat);
+                    return new Cesium.PolygonHierarchy(cartesian3Arr);
                 }, false),
                 material: Cesium.Color.fromCssColorString('#ffffff80'),
-                extrudedHeight: 30,
-                height: 0
-            }
-        });
-        polygonList.push({
-            id: uuid,
-            name: "",
-            data: [lonAndLat],
-            show: true,
-            color: '#ffffff80',
-            height: 0
-        })
-        local.set('polygon', JSON.stringify(polygonList))
-    }
-    /**
-     * 绘制多面体
-     * @param lonAndLat 经纬度集合
-     */
-    drawPolyhedron = () => {
-        // 获取当前点击的实体坐标
-        const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._callback().positions;
-        this.viewer.entities.removeById(polygonId);
-        this.viewer.entities.add({
-            id: polygonId,
-            name: 'polyhedron_name',
-            polygon: {
-                hierarchy: new Cesium.CallbackProperty(() => {
-                    return new Cesium.PolygonHierarchy(positions);
-                }, false),
-                extrudedHeight: form.value.height, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
-                height: 0, // 是指polygon距离地面的高度
-                material: Cesium.Color.fromCssColorString(form.value.color),
-                outlineColor: Cesium.Color.RED,
-                outlineWidth: 2,
-                outline: true
+                // classificationType: Cesium.ClassificationType.BOTH,
+                // extrudedHeight: 0,
+                // height: 0,
             },
+            type: 'polygon',
         });
-    }
+    };
     /**
-     * 修改颜色
+     * 开启绘制
      */
-    setColor = () => {
-        let polygon = this.viewer.entities.getById(polygonId).polygon
-        polygon.material = Cesium.Color.fromCssColorString(form.value.color)
-    }
-    /**
-     * 显示隐藏
-     */
-    setShow = () => {
-        let entities = this.viewer.entities.getById(polygonId)
-        entities.show = !entities.show
-    }
-    /**
-     * 修改名称
-     */
-    setName = () => {
-        let entities = this.viewer.entities.getById(polygonId)
-        entities.name = form.value.name
-    }
-    /**
-     * 保存
-     */
-    save = () => {
-        const positions = this.viewer.entities.getById(polygonId).polygon.hierarchy._callback().positions;
-        for (let index in polygonList) {
-            if (polygonList[index].id === polygonId) {
-                polygonList[index] = form.value
-                polygonList[index].data = positions
-            }
-        }
-        local.setJSON('polygon', JSON.stringify(polygonList))
-    }
-    /**
-    * 开启绘制
-    */
     draw = () => {
-        isDrawLine = true
-    }
-    /**
-     * 加载现有的多边形
-     */
-    drawDatapolygon = (data: any) => {
-        data.forEach((item: any) => {
-            if(item.show){
-                polygonList.push(item)
-                this.viewer.entities.add({
-                    id: item.id,
-                    name: item.name,
-                    polygon: {
-                        hierarchy: new Cesium.CallbackProperty(() => {
-                            return new Cesium.PolygonHierarchy(item.data);
-                        }, false),
-                        extrudedHeight: item.height, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
-                        height: 0, // 是指polygon距离地面的高度
-                        material: Cesium.Color.fromCssColorString(item.color),
-                        outlineColor: Cesium.Color.RED,
-                        outlineWidth: 2,
-                        outline: true
-                    },
-                });
-            }
-        })
-    }
-    // 重置
-    klk = () => {
-        this.delDemoEntity('point_name')
-        isDrawLine = false
-        isDrawPolyGon = false
-        pointAndLineEntity = {
-            pointEntityArr: [],
-            lineEntityArr: [],
-            demoLineEntityArr: [],
+        this.endEdit();
+        // 关闭深度检测
+        this.viewer.scene.globe.depthTestAgainstTerrain = true;
+        // 清除可能会用到的监听事件
+        if (this.handler) {
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
         }
-        nowEditPoint = []
-    }
+        this.handlerLeftClick();
+        this.handlerMouseMove();
+        this.handerRightClick();
+        this.isDrawLine = true;
+        this.isEditLine = false;
+    };
+    /**
+     * 开启编辑
+     */
+    edit = () => {
+        this.viewer.scene.globe.depthTestAgainstTerrain = true;
+        // 清除可能会用到的监听事件
+        if (this.handler) {
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        }
+        this.handlerLeftClick();
+        this.handlerMouseMove();
+        this.handerRightClick();
+        this.isEditLine = true;
+        this.isDrawLine = false;
+    };
+    // 结束编辑
+    endEdit = () => {
+        // 清除可能会用到的监听事件
+        if (this.handler) {
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        }
+        this.isEditLine = false;
+        // 删除画点
+        this.delEntity('point_demo_name');
+        this.delEntity('line_name');
+        // 清空数据
+        this.lineId = null;
+        this.polygonId = null;
+        this.pointArr = [];
+        this.nowPoint = null;
+        this.pointAndLineEntity = {
+            demoLineArr: [],
+            demoPointArr: [],
+            lineArr: [],
+        };
+        return;
+    };
+    // 获取选中面的上的点数据
+    getPolygonData = () => {
+        const polygon = this.viewer.entities.getById(this.polygonId).polygon;
+        this.pointArr = polygon.hierarchy._callback().positions;
+        let pointData: any[] = [];
+        pointData = this.pointArr.map((item: Cesium.Cartesian3) => {
+            return cartesian3_to_lng_lat(item);
+        });
+        return pointData;
+    };
+
     // 监听鼠标左键点击事件
     handlerLeftClick = () => {
         // 监听鼠标左击事件
         this.handler.setInputAction((event: any) => {
-            let pick = this.viewer.scene.pick(event.position)
-            // 判断是否有实体
-            if (pick && pick.id && pick.id.polygon) {
-                for (let item of polygonList) {
-                    form.value.id = item.id
-                    form.value.name = item.name
-                    form.value.show = item.show
-                    form.value.height = item.height
-                    form.value.color = item.color
-                    if (item.id === pick.id.id) {
-                        // 开启抽屉
-                        drawer.value = true
-                        // 储存当前选中的点位id用于查询编辑
-                        polygonId = item.id
-                        // 删除其他实体的编辑点位
-                        this.delDemoEntity('polygon_point')
-                        pointAndLineEntity.pointEntityArr = []
-                        // 选中多边形实体 循环添加编辑点位
-                        for (let cartesian of pick.id.polygon.hierarchy._callback().positions) {
-                            const point = this.viewer.entities.add({
-                                name: "polygon_point",
-                                position: cartesian,
-                                point: {
-                                    color: Cesium.Color.WHITE,
-                                    pixelSize: 8,
-                                    outlineColor: Cesium.Color.BLACK,
-                                    outlineWidth: 1,
-                                },
-                            });
-                            // 保存点的ID以便删除
-                            pointAndLineEntity.pointEntityArr.push(point)
-                        }
-                    }
+            // 根据位置信息选择场景上的物体
+            let pick = this.viewer.scene.pick(event.position);
+            // 判断是否开启绘制
+            if (this.isDrawLine) {
+                const ray = this.viewer.scene.camera.getPickRay(event.position);
+                let cartesian3: Cesium.Cartesian3 = this.viewer.scene.globe.pick(ray, this.viewer.scene);
+                // 点数据保存
+                this.pointArr.push(cartesian3);
+                // 当前点数据
+                this.nowPoint = cartesian3;
+                // 绘制点
+                const point = this.drawPoint('point_demo_name', cartesian3);
+                // 保存点的实体
+                this.pointAndLineEntity.demoPointArr.push(point);
+                // 当前绘制点的数量
+                const num = this.pointArr.length;
+                if (num > 1) {
+                    // 删除鼠标移动时绘制的线
+                    this.delEntity('line_demo_name');
+                    // 生成线的实体
+                    const line = this.drawLine('line_name', [this.pointArr[num - 2], this.pointArr[num - 1]]);
+                    // 保存线的实体
+                    this.pointAndLineEntity.lineArr.push(line);
                 }
-            } else if (pick && pick.id && pick.id.point && (pick.id.name == 'polygon_point')) {
-                // 清空数据
-                nowEditPoint = []
-                // 添加当前点位的数据
-                nowEditPoint.push(pick)
-                // 开启编辑
-                isDrawPolyGon = true
-            } else {
-                // 开始绘制多边形
-                if (isDrawLine) {
-                    // 鼠标当前位置的cartesain3坐标
-                    let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.position);
-                    // 点数据保存
-                    pointArr.push(cartesain3)
-                    // 当前点数据
-                    nowPoint = cartesain3
-                    // 绘制点
-                    const point = this.drawPoint(cartesain3)
-                    // 保存点的实体
-                    pointAndLineEntity.pointEntityArr.push(point)
-                    // 画线
-                    const num = pointArr.length
-                    // 当节点数量大于1时开会绘制线
-                    if (num > 1) {
-                        // 删除鼠标移动画线
-                        this.delDemoEntity('line_demo_name')
-                        // 生成线的实体
-                        const line = this.drawLine('line_name', [pointArr[num - 2], pointArr[num - 1]])
+                // 判断是否开启编辑
+            } else if (this.isEditLine) {
+                // 判断是否获取到了 pick 且是面的实体
+                if (Cesium.defined(pick) && pick.id.type === 'polygon') {
+                    if (!this.polygonId) {
+                        this.polygonId = pick.id.id;
+                        // 获取面的点数据
+                        const cartesian3Arr = this.viewer.entities
+                            .getById(this.polygonId)
+                            .polygon.hierarchy._callback().positions;
+                        //生成线
+                        const line = this.drawLine('line_name', cartesian3Arr);
                         // 保存线的实体
-                        pointAndLineEntity.lineEntityArr.push(line)
+                        this.pointAndLineEntity.lineArr.push(line);
+                        // 获取线的id
+                        this.lineId = line.id;
+                        // 删除其他实体的编辑点位
+                        this.delEntity('point_demo_name');
+                        this.pointAndLineEntity.demoPointArr = [];
+                        cartesian3Arr.map((item: Cesium.Cartesian3, index: number) => {
+                            // 生成红白色编辑点
+                            if (index > 0) {
+                                const point1 = cartesian3Arr[index - 1];
+                                const point2 = cartesian3Arr[index];
+                                const cartesian3 = Cesium.Cartesian3.lerp(
+                                    point1,
+                                    point2,
+                                    0.5,
+                                    new Cesium.Cartesian3()
+                                );
+                                const point = this.drawPoint(
+                                    'point_center_demo_name',
+                                    cartesian3,
+                                    'center_edit',
+                                    '#fff'
+                                );
+                                this.pointAndLineEntity.demoPointArr.push(point);
+                            }
+                            // 生成红色编辑点
+                            const point = this.drawPoint('point_demo_name', item, 'edit');
+                            // 保存线的实体
+                            this.pointAndLineEntity.demoPointArr.push(point);
+                        });
+                    }
+                } else if (Cesium.defined(pick) && pick.id.type === 'edit') {
+                    if (this.nowEditPoint) {
+                        // 清空数据
+                        this.nowEditPoint = null;
+                    } else {
+                        this.pointAndLineEntity.demoPointArr.map((item: Cesium.Polyline, index: number) => {
+                            if (item.id === pick.id.id && pick.id.name === 'point_demo_name') {
+                                this.leftCenterPoint = this.pointAndLineEntity.demoPointArr[index - 1];
+                                this.rightCenterPoint = this.pointAndLineEntity.demoPointArr[index + 1];
+                            }
+                        });
+                        // 添加当前点位的数据
+                        this.nowEditPoint = pick;
+                    }
+                } else if (Cesium.defined(pick) && pick.id.type === 'center_edit') {
+                    if (this.nowEditPoint) {
+                        const index = this.pointAndLineEntity.demoPointArr.findIndex(
+                            (item: any) => this.nowEditPoint.id.id === item.id
+                        );
+                        const nowEditPointPosition = this.nowEditPoint!.id.position._value;
+                        this.nowEditPoint.id.point.color = Cesium.Color.fromCssColorString('#fc3d4a');
+                        this.nowEditPoint.id.type = 'edit';
+                        // 右侧
+                        let pointR = this.pointAndLineEntity.demoPointArr[index + 1].position._value;
+                        pointR = Cesium.Cartesian3.lerp(
+                            pointR,
+                            nowEditPointPosition,
+                            0.5,
+                            new Cesium.Cartesian3()
+                        );
+                        pointR = this.drawPoint('point_center_demo_name', pointR, 'center_edit', '#fff');
+                        this.pointAndLineEntity.demoPointArr.splice(index + 1, 0, pointR);
+                        // 左侧
+                        let pointL = this.pointAndLineEntity.demoPointArr[index - 1].position._value;
+                        pointL = Cesium.Cartesian3.lerp(
+                            pointL,
+                            nowEditPointPosition,
+                            0.5,
+                            new Cesium.Cartesian3()
+                        );
+                        pointL = this.drawPoint('point_center_demo_name', pointL, 'center_edit', '#fff');
+                        this.pointAndLineEntity.demoPointArr.splice(index, 0, pointL);
+                        // 清空数据
+                        this.nowEditPoint = null;
+                    } else {
+                        this.pointAndLineEntity.demoPointArr.map((item: Cesium.Polyline, index: number) => {
+                            if (item.id === pick.id.id && pick.id.name === 'point_center_demo_name') {
+                                pick.id.name = 'point_demo_name';
+                            }
+                        });
+                        // 添加当前点位的数据
+                        this.nowEditPoint = pick;
                     }
                 }
             }
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
-    }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    };
     // 监听鼠标移动事件
     handlerMouseMove = () => {
         this.handler.setInputAction((event: any) => {
-            if (isDrawLine && pointArr.length > 0) {
-                // 绘制逻辑
-                // 鼠标当前位置的cartesain3坐标
-                let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.startPosition);
-                // 删除上一次生成线
-                this.delDemoEntity('line_demo_name')
-                // 创建线
-                const demoLine = this.drawLine('line_demo_name', [nowPoint, cartesain3])
-                // 保存移动线的实体
-                pointAndLineEntity.demoLineEntityArr.push(demoLine)
-            } else if (isDrawPolyGon && !isDrawLine) {
-                // 编辑逻辑
-                // 通过id查询当前选中的实体
-                const box = this.viewer.entities.getById(polygonId);
-                // 鼠标当前位置的cartesain3坐标
-                let cartesain3 = this.viewer.scene.camera.pickEllipsoid(event.startPosition);
-                // 更新点坐标
-                nowEditPoint[0].id.position = cartesain3
-                // 获取更新面坐标的数据
-                let points: any = [];
-                pointAndLineEntity.pointEntityArr.forEach((item: any) => {
-                    points.push(item.position._value);
-                })
-                // 更新面坐标
-                box.polygon.hierarchy = new Cesium.CallbackProperty(() => {
-                    return new Cesium.PolygonHierarchy(points);
-                }, false);
+            let cartesian = this.viewer.camera.pickEllipsoid(
+                event.endPosition,
+                this.viewer.scene.globe.ellipsoid
+            );
+            // 判断点为是否在地球内
+            if (cartesian) {
+                if (this.isDrawLine && this.pointArr.length > 0) {
+                    // 绘制逻辑
+                    // 根据位置信息选择场景上的物体
+                    let pick = this.viewer.scene.pick(event.startPosition);
+                    // 鼠标当前位置的cartesian3坐标
+                    // 鼠标当前位置地形的cartesian3坐标
+                    const ray = this.viewer.scene.camera.getPickRay(event.startPosition);
+                    let cartesian3: Cesium.Cartesian3 = this.viewer.scene.globe.pick(ray, this.viewer.scene);
+                    // 删除上一次生成线
+                    this.delEntity('line_demo_name');
+                    // 创建线
+                    const demoLine = this.drawLine('line_demo_name', [this.nowPoint, cartesian3]);
+                    // 保存移动线的实体
+                    this.pointAndLineEntity.demoLineArr.push(demoLine);
+                } else if (this.isEditLine && this.nowEditPoint) {
+                    // 编辑逻辑
+                    // 通过id查询线实体
+                    const line = this.viewer.entities.getById(this.lineId);
+                    // 通过id查询面实体
+                    const polygon = this.viewer.entities.getById(this.polygonId);
+                    // 鼠标当前位置的cartesian3坐标
+                    const ray = this.viewer.scene.camera.getPickRay(event.startPosition);
+                    let cartesian3: Cesium.Cartesian3 = this.viewer.scene.globe.pick(ray, this.viewer.scene);
+                    // 更新点坐标
+                    this.nowEditPoint!.id.position = cartesian3;
+                    // 获取更新点坐标的数据
+                    let points: any = [];
+                    // 获取更新点的实体集合
+                    let demoPointArr: any = [];
+                    this.pointAndLineEntity.demoPointArr.map((item: any) => {
+                        if (item.name === 'point_demo_name') {
+                            points.push(item.position._value);
+                            demoPointArr.push(item);
+                        }
+                    });
+                    // 修改edit编辑点周围白色点的位置
+                    if (this.nowEditPoint.id.type == 'edit') {
+                        demoPointArr.map((item: Cesium.Polyline, index: number) => {
+                            if (item.id === this.nowEditPoint.id.id) {
+                                const pointL = demoPointArr[index - 1]?.position._value;
+                                const pointR = demoPointArr[index + 1]?.position._value;
+                                if (this.leftCenterPoint) {
+                                    this.leftCenterPoint.position._value = Cesium.Cartesian3.lerp(
+                                        pointL,
+                                        this.nowEditPoint.id.position._value,
+                                        0.5,
+                                        new Cesium.Cartesian3()
+                                    );
+                                }
+                                if (this.rightCenterPoint) {
+                                    this.rightCenterPoint.position._value = Cesium.Cartesian3.lerp(
+                                        pointR,
+                                        this.nowEditPoint.id.position._value,
+                                        0.5,
+                                        new Cesium.Cartesian3()
+                                    );
+                                }
+                            }
+                        });
+                    }
+                    // 更新线坐标
+                    line.polyline.positions = new Cesium.CallbackProperty(() => {
+                        return points;
+                    }, false);
+                    // 更新面坐标
+                    polygon.polygon.hierarchy = new Cesium.CallbackProperty(() => {
+                        return new Cesium.PolygonHierarchy(points);
+                    }, false);
+                }
             }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
-    }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    };
     // 监听鼠标右键点击事件
     handerRightClick = () => {
         this.handler.setInputAction((event: any) => {
-            if (!isDrawPolyGon && isDrawLine) {
+            if (this.isDrawLine) {
                 // 结束绘制
-                isDrawLine = false
-                // 删除鼠标移动画线
-                this.delDemoEntity('line_demo_name')
+                this.isDrawLine = false;
+                // 添加最后的点
+                this.pointArr.push(this.pointArr[0]);
                 // 画多边形结束,形成面开始
-                this.drawPolyGon(pointArr)
+                this.drawPolygon('polygon', this.pointArr);
+                // 删除辅助线
+                this.delEntity('line_demo_name');
+                // 删除画点
+                this.delEntity('point_demo_name');
+                // 删除线
+                this.delEntity('line_name');
                 // 清空数据
-                // 删除画点以及画线
-                this.delDemoEntity('line_name')
-                this.delDemoEntity('point_name')
-                pointArr = []
-                nowPoint = []
-                pointAndLineEntity = {
-                    pointEntityArr: [],
-                    lineEntityArr: [],
-                    demoLineEntityArr: [],
+                this.lineId = null;
+                this.pointArr = [];
+                this.nowPoint = null;
+                this.pointAndLineEntity = {
+                    demoLineArr: [],
+                    demoPointArr: [],
+                    lineArr: [],
+                };
+                // 清除可能会用到的监听事件
+                if (this.handler) {
+                    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+                    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
                 }
-            } else if (isDrawPolyGon && !isDrawLine) {
-                // 结束编辑
-                isDrawPolyGon = false
             }
-        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
-    }
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    };
 }
-

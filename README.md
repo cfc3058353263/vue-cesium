@@ -191,7 +191,7 @@ viewer.scene.globe.depthTestAgainstTerrain = true;
         fillColor: Cesium.Color.fromCssColorString("#ffffff"),
         pixelOffset: new Cesium.Cartesian2(0, -60)
     },
-    // type 类型/虽然该字段在Entity类型中不存在，但你依旧可以添加其他字段，并且在查询是该字段也会获取到
+    // type 类型/虽然该字段在Entity类型中不存在，但你依旧可以添加其他字段，并且在查询时该字段也会获取到
     type: 'billboard',
 })
 ```  
