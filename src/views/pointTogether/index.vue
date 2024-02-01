@@ -8,8 +8,8 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
-import { cartesian3_to_lng_lat } from '@/components/utils/utils.ts'
-import { pointTogether } from '@/components/Together/together.ts'
+import { cartesian3_to_lng_lat } from '@/components/utils/utils'
+import { pointTogether } from '@/components/Together/together'
 // 创建Cesium Viewer
 const viewer = ref();
 // 初始化地图

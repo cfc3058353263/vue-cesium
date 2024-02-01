@@ -216,15 +216,53 @@ roll：默认旋转角度为0，左右旋转.正角度向右旋转，负角度�
 // https://blog.csdn.net/ljy1998dsb/article/details/124072373?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-4-124072373-blog-132210829.235^v40^pc_relevant_3m_sort_dl_base3&spm=1001.2101.3001.4242.3&utm_relevant_index=7
 ```
 
-### 二维场景与三维厂家切换
-
-### 动画
-
-
-### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
+### 二维场景与三维场景切换
 ```js
-运行
-yarn config set ignore-engines true 
+// cesium中自带的二维三维转换方法
+// viewer.scene.mode === Cesium.SceneMode.SCENE3D //3D情况下
+// Cesium.SceneMode中包含：
+// Cesium.SceneMode.COLUMBUS_VIEW//哥伦布视图  
+// Cesium.SceneMode.SCENE2D//2维模式
+// Cesium.SceneMode.SCENE3D//3维模式
+// Cesium.SceneMode.MORPHING//模式之间变换，例如二维到三维 
+// 三维-->二维 0代表转换动画的时间
+viewer.scene.morphTo2D(0); 
+// 二维-->三维 0代表转换动画的时间
+viewer.value.scene.morphTo3D(0);
+
+// openlayer中自带的二维三维转换方法
+// 需要安装openlayer 和 ol-cesium插件
+// 初始化ol地图
+let map: Map = new Map({
+    target: 'olContainer',
+    layers: [gaode, wms, geoJson],
+    view: new View({
+        projection: "EPSG:4326",    //使用这个坐标系
+        center: [104.704968, 31.540962],  //西南科技大学
+        zoom: 5
+    })
+});
+// 初始化ol-cesium地图
+let ol3d = new OLCesium({ map: map });
+// 2d 3d 切换
+// true 3d
+ol3d.setEnabled(true);
+// false 2d
+ol3d.setEnabled(false);
+// 切换之后可以使用cesium的api
+// 如加载wmts天地图的影像图
+ // 获取cesium scene getCesiumScene获取cesium的场景,还有其他方法可以获取相机等
+const ol3dLayer = ol3d.getCesiumScene()
+const tdMap = new Cesium.WebMapTileServiceImageryProvider({
+    url: "http://t{s}.tianditu.gov.cn/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=b679e53c0eca7f1f302d4336b6e21b2c",
+    subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+    layer: "tdtImgLayer",
+    style: "default",
+    format: "image/jpeg",
+    tileMatrixSetID: "GoogleMapsCompatible",//使用谷歌的瓦片切片方式
+})
+// 添加天地图影像
+ol3dLayer.imageryLayers.addImageryProvider(tdMap);
 ```
 
 
@@ -254,26 +292,26 @@ Cesium的所有API汇总：
 
 ```
 
-### cesium 事件
-#### 以鼠标操作（左键、中键、右键操作等）为主的 ScreenSpaceEventHandler 类
-#### 相机控制事件类 screenSpaceCameraController 并不是像鼠标事件相关类
+### cesium 鼠标事件
 ```js
+// 以鼠标操作（左键、中键、右键操作等）为主的 ScreenSpaceEventHandler 类
+// 相机控制事件类 screenSpaceCameraController 并不是像鼠标事件相关类
 // ScreenSpaceEventHandler 那样需要提前实例化。Cesium在Viewer类的实例化过程中，也实例化了其他很多类，其中就包括ScreenSpaceCameraController类，并把实例化结果赋值给了viewer.scene.screenSpaceCameraController。所以，我们直接去操作viewer.scene.screenSpaceCameraController就可以了。
 ```
 #### 场景渲染事件
 ```js
-场景渲染事件主要包括以下四种：
-scene.preUpdate： 更新或呈现场景之前将引发的事件
-scene.postUpdate： 场景更新后以及渲染场景之前立即引发的事件
-scene.preRender： 场景更新后以及渲染场景之前将引发的事件
-scene.postRender： 渲染场景后立即引发的事件
+// 场景渲染事件主要包括以下四种：
+// scene.preUpdate： 更新或呈现场景之前将引发的事件
+// scene.postUpdate： 场景更新后以及渲染场景之前立即引发的事件
+// scene.preRender： 场景更新后以及渲染场景之前将引发的事件
+// scene.postRender： 渲染场景后立即引发的事件
 
-preRender: 预渲染事件，在场景预处理之后，相机视角确定之前调用。此事件在场景开始渲染之前调用，因此可以使用此事件来执行一些初始化或准备工作，例如：获取视口或获取相机参数。
-postRender: 渲染后事件，在场景完成渲染之后调用。此事件可以用于处理场景渲染的逻辑，例如：处理绘制、设置绘制命令等。
-preUpdate: 预更新事件，在更新前的准备工作阶段调用。此事件在执行场景更新之前调用，可以使用此事件来检查更新是否需要执行，例如：检查更新是否需要更新相机或场景。
-postUpdate: 更新后事件，在更新完成后调用。此事件在执行场景更新之后调用，可以使用此事件来处理更新后的逻辑，例如：处理相机或场景的更新结果。
+// preRender: 预渲染事件，在场景预处理之后，相机视角确定之前调用。此事件在场景开始渲染之前调用，因此可以使用此事件来执行一些初始化或准备工作，例如：获取视口或获取相机参数。
+// postRender: 渲染后事件，在场景完成渲染之后调用。此事件可以用于处理场景渲染的逻辑，例如：处理绘制、设置绘制命令等。
+// preUpdate: 预更新事件，在更新前的准备工作阶段调用。此事件在执行场景更新之前调用，可以使用此事件来检查更新是否需要执行，例如：检查更新是否需要更新相机或场景。
+// postUpdate: 更新后事件，在更新完成后调用。此事件在执行场景更新之后调用，可以使用此事件来处理更新后的逻辑，例如：处理相机或场景的更新结果。
 
-在代码中需要addEventListener来进行绑定,用removeEventListener来移除绑定
+// 在代码中需要addEventListener来进行绑定,用removeEventListener来移除绑定
 ```
 
 ### 经纬度转换
@@ -287,9 +325,9 @@ var gcj02towgs84=coordtransform.gcj02towgs84(bd09togcj02);
 ```
 
 ### 加载wmts https://blog.csdn.net/m0_48524977/article/details/126527469
-
-http://localhost:8080/geoserver/gwc/service/wmts/rest/topp:states/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png
-
+```js
+// http://localhost:8080/geoserver/gwc/service/wmts/rest/topp:states/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png
+```
 ### 关于viewer https://zhuanlan.zhihu.com/p/80904975?utm_id=0
 ```js
 // Viewer是Cesium中用于显示3D场景的组件。它提供了创建和控制3D场景所需的所有基本功能，包括加载3D模型、添加图像覆盖物、设置相机位置和方向、处理用户输入等。
@@ -382,7 +420,9 @@ const viewer= new Cesium.Viewer('mycesium',{
 ```
 
 ### cesium + three.js
-
+```js
+// 不建议在cesium中使用three.js
+```
 
 ### lookAtTransform
 ```js
@@ -404,4 +444,10 @@ viewer.value.scene.moon.show = false; // 将月球设置为不显示
 viewer.value.scene.skyAtmosphere.show = false; // 设置大气为不显示
 viewer.value.scene.fog.enable = false; //设置雾为不显示
 // 移除双击监听事件
+```
+
+### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
+```js
+运行
+yarn config set ignore-engines true 
 ```

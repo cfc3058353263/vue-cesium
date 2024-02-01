@@ -40,9 +40,6 @@ import { onMounted, ref, reactive, toRefs } from "vue";
 import { Polygon } from '@/components/Polygon/polygon';
 import { Model } from '@/components/Model/Model'
 
-import cache from '@/plugins/cache.ts'
-const { local } = cache
-
 const data = reactive({
     activeName: 'first',// 标签状态
 })
@@ -148,7 +145,7 @@ onMounted(async () => {
     }
 }
 </style>
-<style>
+<style lang="scss">
 .drawerModal {
     width: 30%;
     inset: 0 0 0 70% !important;

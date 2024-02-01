@@ -7,16 +7,16 @@
         </div>
     </div>
 </template>
-  
+
 <script setup lang="ts">
-import * as Cesium from "cesium";
-import { onMounted, ref } from "vue";
-import { createWall, addWall } from "@/components/Wall/wall";
+import * as Cesium from 'cesium';
+import { onMounted, ref } from 'vue';
+import { createWall, addWall } from '@/components/Wall/wall';
 // 创建Cesium Viewer
 let viewer: Cesium.Viewer;
 // 初始化地图
 const initMap = async () => {
-    viewer = new Cesium.Viewer("cesiumContainer", {
+    viewer = new Cesium.Viewer('cesiumContainer', {
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
@@ -47,21 +47,19 @@ const initMap = async () => {
     });
     viewer.scene.globe.depthTestAgainstTerrain = true;
     var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-    handler.setInputAction(async function (event: any) {
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    handler.setInputAction(async function (event: any) {}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 };
 
 const drawWall = () => {
-    createWall(viewer)
+    createWall(viewer);
     // addWall(viewer)
-}
+};
 
 onMounted(() => {
     initMap();
-
 });
 </script>
-  
+
 <style lang="scss" scoped>
 #cesiumContainer {
     height: 100%;
@@ -74,4 +72,3 @@ onMounted(() => {
     }
 }
 </style>
-  
