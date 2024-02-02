@@ -5,7 +5,10 @@
             <el-button type="primary" size="small" @click="editPolygon()">开启编辑</el-button>
             <el-button type="primary" size="small" @click="endPolygonEdit()">结束编辑</el-button>
             <el-button type="primary" size="small" @click="getPolygonInfo()">获取数据</el-button>
+            <el-button type="primary" size="small" @click="addModel()">添加模型</el-button>
+            <el-button type="primary" size="small" @click="changeModel()">选择模型</el-button>
         </div>
+        <ModelDrawer v-model:drawer="drawer" :tilesModel="tilesModel"></ModelDrawer>
         <!-- <el-drawer v-model="drawer" title="I am the title" :with-header="false" :modal="false" modal-class="drawerModal">
             <el-form ref="ruleFormRef" :model="form" status-icon label-width="120px" class="demo-ruleForm">
                 <el-form-item label="实体名称" prop="name">
@@ -35,20 +38,21 @@
 </template>
    
 <script setup lang="ts">
-import * as Cesium from "cesium";
-import { onMounted, ref, reactive, toRefs } from "vue";
-import { Polygon } from '@/components/Polygon/polygon';
-import { Model } from '@/components/Model/Model'
+import * as Cesium from 'cesium';
+import { onMounted, ref, reactive, toRefs } from 'vue';
+import { Polygon } from '@/components/Polygon/Polygon';
+import { Model } from '@/components/Model/models';
+import ModelDrawer from './components/modelDrawer.vue';
 
 const data = reactive({
-    activeName: 'first',// 标签状态
-})
-const { activeName } = toRefs(data)
+    activeName: 'first', // 标签状态
+});
+const { activeName } = toRefs(data);
 
 // 当前组件的实例
-const cesiumContainer = ref()
+const cesiumContainer = ref();
 // 创建Cesium Viewer
-const viewer = ref()
+const viewer = ref();
 // 初始化地图
 const initMap = async () => {
     viewer.value = new Cesium.Viewer('cesiumContainer', {
@@ -63,7 +67,7 @@ const initMap = async () => {
         infoBox: false,
         selectionIndicator: false,
         // 添加地形服务
-        terrain: Cesium.Terrain.fromWorldTerrain()
+        terrain: Cesium.Terrain.fromWorldTerrain(),
     });
     // 相机飞入点
     viewer.value.camera.setView({
@@ -78,58 +82,75 @@ const initMap = async () => {
     });
 };
 // polyGon实例
-let polygon: any
+let polygon: any;
 // 绘制多边形
 const drawPolygon = () => {
-    polygon.draw()
-}
+    polygon.draw();
+};
 // 编辑多边形
 const editPolygon = () => {
-    polygon.edit()
-}
+    polygon.edit();
+};
 const endPolygonEdit = () => {
-    polygon.endEdit()
-}
+    polygon.endEdit();
+};
 // 获取数据
 const getPolygonInfo = () => {
-    const data = polygon.getPolygonData()
-    console.log(data)
-}
+    const data = polygon.getPolygonData();
+    console.log(data);
+};
+let model: Model;
 // 添加model
-let model: Model
+const addModel = () => {
+    model.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json');
+};
+// 选择模型
+const changeModel = () => {
+    model.handlerLeftClick();
+};
+// 抽屉
+const drawer = ref(false);
+// 模型实例
+const tilesModel = ref();
+// 点击获取实例
+const getTilesModel = (Cesium3DTileset: Cesium.Cesium3DTileset) => {
+    tilesModel.value = Cesium3DTileset;
+    drawer.value = true;
+};
 
 // 修改名称
 const handleChangeName = () => {
-    polygon.setName()
-}
+    polygon.setName();
+};
 // 修改高度
 const handleChangeHeight = () => {
-    polygon.drawPolyhedron()
-}
+    polygon.drawPolyhedron();
+};
 //  修改颜色
 const handleChangeColor = () => {
-    polygon.setColor()
-}
+    polygon.setColor();
+};
 // 显示隐藏
 const handleChangeShow = () => {
-    polygon.setShow()
-}
+    polygon.setShow();
+};
 // 保存
 const handleSubmit = () => {
-    polygon.save()
-}
+    polygon.save();
+};
 onMounted(async () => {
-    initMap()
+    initMap();
+    // viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    viewer.value.scene.globe.depthTestAgainstTerrain = true;
     // 监听cesiumContainer的鼠标事件
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas)
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
     // 创建polyGon
-    polygon = new Polygon(viewer.value, handler)
+    polygon = new Polygon(viewer.value, handler);
     // 创建model
-    model = new Model(viewer.value, handler)
-    const tileset = await model.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json')
-    model.handlerLeftClick()
+    model = new Model(viewer.value, handler);
+    model.handlerLeftClickCallBack = getTilesModel;
+    model.handlerLeftClick();
 });
-
 </script>
    
 <style lang="scss" scoped>
