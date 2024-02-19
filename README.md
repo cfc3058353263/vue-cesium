@@ -7,7 +7,7 @@ imageLayers.remove(imageLayers.get(0))
 // c
 var gaodeImageryProvider = new Cesium.UrlTemplateImageryProvider({
     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-    maximumLevel: 18,
+    maximumLevel: 18, // 设置最大级别maximumLevel 建议设置到18，否则还是会出现此级别下无地图影像的情况，例如天地图
     minimumLevel: 1,
     credit: 'Amap'
 })
@@ -264,8 +264,65 @@ const tdMap = new Cesium.WebMapTileServiceImageryProvider({
 // 添加天地图影像
 ol3dLayer.imageryLayers.addImageryProvider(tdMap);
 ```
+### 动态立体墙
+```js
+// 关于动态立体墙的效果主要是关于material的设置，这其中需要添加着色器的配置
+   let image = './image.png', //选择自己的动态材质图片
+        color = Cesium.Color.fromCssColorString('rgba(0, 255, 255, 1)'),
+        speed = 1.0, // 将speed设置为正数后，墙面会有上下移动的效果。
+        source =
+            'czm_material czm_getMaterial(czm_materialInput materialInput)\n\
+            {\n\
+                czm_material material = czm_getDefaultMaterial(materialInput);\n\
+                vec2 st = materialInput.st;\n\
+                vec4 colorImage = texture(image, vec2(fract((st.t - speed*czm_frameNumber*0.005)), st.t));\n\
+                vec4 fragColor;\n\
+                fragColor.rgb = color.rgb / 1.0;\n\
+                fragColor = czm_gammaCorrect(fragColor);\n\
+                material.alpha = colorImage.a * color.a;\n\
+                material.diffuse = (colorImage.rgb+color.rgb)/2.0;\n\
+                material.emission = fragColor.rgb;\n\
+                return material;\n\
+            }';
+    let material = new Cesium.Material({
+        fabric: {
+            type: 'PolylinePulseLink',
+            uniforms: {
+                color: color,
+                image: image,
+                speed: speed,
+            },
+            source: source,
+        },
+        translucent: function () {
+            return true;
+        },
+    });
+    return material;
+```
+### 地形与图形绘制的问题
+```js
+// 如果想要绘制立体图形需要关闭地形和开启地形检测
+// 如果给定的模型高度是高于地面的，则可以关闭地形
+viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+// 开启地形深度检测
+viewer.value.scene.globe.depthTestAgainstTerrain = true;
+```
+### 性能优化
+```js
+// 1关闭太阳，月亮，天空盒，雾等相关特效
+viewer.scene.moon.show = false;
+viewer.scene.fog.enabled = false;
+viewer.scene.sun.show = false;
+viewer.scene.skyBox.show = false;
+// 2调整画面精度 设置分辨率
+viewer.resolutionScale = 0.9; // 默认值为 1.0；
+// 3 3D Tiles 相关配置
+maximumScreenSpaceError:64 //默认值16 用于提高细节细化级别的最大屏幕空间错误
+// 4 对于大量的图形展示使用 primitive来进行加载 对于单独操作的图形使用Entity来进行加载操作
+```
 
-
+### 关于缩放监听和展示效果
 
 ### cesiun api
 ```js
@@ -417,6 +474,8 @@ const viewer= new Cesium.Viewer('mycesium',{
 ```js
 // DataSource有多种类型文件形式，如czml，GeoJson等，不同的文件类型只是为了不同方式的输入数据结构而已，本质上内部还是转换为Entity对象保存。
 // 开发中常用来天czml，GeoJson、kml等文件类型
+// https://cesium.com/learn/cesiumjs/ref-doc/DataSourceCollection.html
+// DataSource 中可以通过 raise /raiseToTop / lowerToBottom/ lower 等设置图层层级关系
 ```
 
 ### cesium + three.js
@@ -432,6 +491,7 @@ const viewer= new Cesium.Viewer('mycesium',{
 // offset有两种类型，此处只讲一种：Cartesian3，即笛卡尔坐标，表示相机在局部坐标系中的位置，如下图中的OP矢量即表示相机的offset参数。
 ```
 
+
 ### 初始化加载
 ```js
 // 1. 去掉cesium的log
@@ -445,6 +505,36 @@ viewer.value.scene.skyAtmosphere.show = false; // 设置大气为不显示
 viewer.value.scene.fog.enable = false; //设置雾为不显示
 // 移除双击监听事件
 ```
+
+### 鼠标操作习惯
+```js
+// 在进行绘制操作时，需要修改鼠标的样式操作
+```
+### 鼠标点击操作
+```js
+// 首先需要保证鼠标在地球上进行点击操作
+ 
+```
+### Cesium的四种点击拾取方法
+```js
+// 1、viewer.scene.pick()
+// 通过坐标位置，拾取实体（Entity），图元（Primitive）,3DTiles对象，返回的是scene中指定位置最上层的对象。例如点击获取
+// Entity的pick对象，通过pick.id可以拾取当前的entity对象。拾取后，可以用于改变对象的属性参数，如颜色，图片等。
+let pick = viewer.scene.pick(event.position); // 获取 pick 拾取对象
+// 2、viewer.scene.globe.pick()
+// 返回一个射线（ray）和地球表面的一个交点的Cartesian3坐标。此方法一般用于获取加载地形后的经纬度和高程，不包括模型、倾斜摄影等表面高度。
+let ray = viewer.camera.getPickRay(event.position);//获取一条射线
+let position = viewer.scene.globe.pick(ray, viewer.scene);
+// 3、viewer.scene.camera.pickEllipsoid()
+// 返回相机视角下鼠标点击的对应椭球面位置。接收屏幕坐标，返回Cartesian3坐标。适用裸球表面的选取，是基于数学模型的椭圆球体。
+let position = viewer.scene.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
+// 4、viewer.scene.pickPosition()
+// 拾取对应位置的Cartesian3，适用于模型表面位置的选取，拾取三维物体的坐标等。
+// 注意事项： 一定开启深度检测（viewer.scene.globe.depthTestAgainstTerrain = true），否则在没有没有3dTile模型的情况下，会出现空间坐标不准的问题。
+let position = viewer.scene.pickPosition(event.position);
+```
+### 关于计算方面多使用turf.js的api来进行坐标的计算
+
 
 ### 关于 error @achrinza/node-ipc@9.2.2: The engine “node“ is incompatible的报错
 ```js

@@ -3,18 +3,21 @@ import { cartesian3_to_lng_lat } from '@/components/utils/utils';
 import circle_gray from '@/assets/drawImage/circle_gray.png';
 import circle_red from '@/assets/drawImage/circle_red.png';
 
-// 当前选中的图形id
 export class Polygon {
     viewer: any;
     handler: any;
     pointAndLineEntity: any;
     positions: Cesium.Cartesian3[];
     pointArr: any[];
-    constructor(viewer: Cesium.Viewer, handler: Cesium.ScreenSpaceEventHandler) {
+    handlerLeftClickCallBack: Function; // 当前点击当前图形的回调函数
+    polygon: any;
+    constructor(viewer: any, handler: any) {
         this.viewer = viewer; // cesium 实例
         this.handler = handler; // cesium 鼠标监听事件
         this.positions = []; // 点的坐标
         this.pointArr = []; //点的实例
+        this.handlerLeftClickCallBack = () => {};
+        this.polygon = null;
     }
     /**
      * 删除点与线实体
@@ -78,6 +81,8 @@ export class Polygon {
                 hierarchy: hierarchy,
                 material: Cesium.Color.fromCssColorString('#ffffff80'),
                 classificationType: Cesium.ClassificationType.BOTH,
+                extrudedHeight: 10, // 是指polygon拉伸后的面距离地面的拉伸高度 只有当extrudedHeight大于height时才会呈现挤出高度的效果，且polygon的厚度就是两者的差值。
+                height: 0, // 是指polygon距离地面的高度
             },
             polyline: {
                 positions: positions,
@@ -114,9 +119,33 @@ export class Polygon {
             },
         });
     };
+    // 绘制多面体
+    drawPolyhedron = (extrudedHeight: number = 0, height: number = 0, color: string = '#ffffff') => {
+        // 获取当前点击的实体坐标
+        this.viewer.entities.remove(this.polygon);
+        const polyhedron = this.viewer.entities.add({
+            name: 'polyhedron_name',
+            polygon: {
+                hierarchy: new Cesium.CallbackProperty(() => {
+                    return new Cesium.PolygonHierarchy(this.positions);
+                }, false),
+                material: Cesium.Color.fromCssColorString('#ffffff'),
+                extrudedHeight: 0,
+                height: 0,
+                clampToGround: true,
+            },
+        });
+        return polyhedron
+    };
+    // 修改面的高度
+    setHeight = (polygonEntity:any, height: number) => {
+        console.log(polygonEntity)
+        const extrudedHeight = polygonEntity.polygon.extrudedHeight._value;
+        polygonEntity.polygon.height._value = height + extrudedHeight;
+    };
     // 开启绘制
     draw = () => {
-        this.viewer.scene.globe.depthTestAgainstTerrain = true;
+        // this.viewer.scene.globe.depthTestAgainstTerrain = true;
         let polygon: Cesium.Entity.ConstructorOptions | null = null;
         let floatingPoint: any = null;
         this.handler.setInputAction((event: any) => {
@@ -177,14 +206,12 @@ export class Polygon {
     };
     // 开启编辑
     edit = () => {
-        this.viewer.scene.globe.depthTestAgainstTerrain = true;
-        this.clearHander();
+        // this.viewer.scene.globe.depthTestAgainstTerrain = true;
         let polygon: any = null;
         let floatingPoint: any = null;
         let leftCenterPoint: any = null; // 左侧点
         let rightCenterPoint: any = null; // 右侧点
         this.handler.setInputAction((event: any) => {
-            console.log(event);
             var position = event.position;
             if (!Cesium.defined(position)) {
                 return;
@@ -235,6 +262,8 @@ export class Polygon {
                     }
                 });
                 polygon = this.drawPolygon('polygon');
+                this.polygon = polygon;
+                this.handlerLeftClickCallBack(polygon);
             } else if (Cesium.defined(pick) && pick.id.type === 'edit') {
                 if (floatingPoint) {
                     floatingPoint = null;
@@ -344,6 +373,7 @@ export class Polygon {
             this.pointArr = [];
             this.showPolygon(this.positions);
             this.viewer.entities.remove(polygon);
+            this.polygon = null;
             this.positions = [];
         }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
     };

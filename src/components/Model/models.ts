@@ -30,7 +30,7 @@ export class Model {
         });
         tileset['type'] = '3dtiles';
         this.viewer.scene.primitives.add(tileset);
-        this.viewer.zoomTo(tileset);
+        // this.viewer.zoomTo(tileset);
         return tileset;
     };
     //  模型旋转 / 大小修改 / 平移 由于每次进行变换时tileset.boundingSphere.center模型中心的位置是不会改变的，你只能对模型进行偏移的操作 因此旋转缩放平移目前只能在一个方法中实现

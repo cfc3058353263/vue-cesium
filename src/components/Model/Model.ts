@@ -58,11 +58,11 @@ export class Model {
         tileset._root.transform = m;
     }
 
-
     /**
      * 模型单体化
      */
     addTilesetModel = (data) => {
+        console.log(data)
         this.handlerLeftClick()
         this.handlerMouseMove()
         const positions = data.positions

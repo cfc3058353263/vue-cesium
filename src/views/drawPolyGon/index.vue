@@ -3,37 +3,12 @@
         <div class="draw" type="card">
             <el-button type="primary" size="small" @click="drawPolygon()">开始绘制</el-button>
             <el-button type="primary" size="small" @click="editPolygon()">开启编辑</el-button>
-            <el-button type="primary" size="small" @click="endPolygonEdit()">结束编辑</el-button>
-            <el-button type="primary" size="small" @click="getPolygonInfo()">获取数据</el-button>
+            <!-- <el-button type="primary" size="small" @click="getPolygonInfo()">获取数据</el-button> -->
             <el-button type="primary" size="small" @click="addModel()">添加模型</el-button>
             <el-button type="primary" size="small" @click="changeModel()">选择模型</el-button>
         </div>
-        <ModelDrawer v-model:drawer="drawer" :tilesModel="tilesModel"></ModelDrawer>
-        <!-- <el-drawer v-model="drawer" title="I am the title" :with-header="false" :modal="false" modal-class="drawerModal">
-            <el-form ref="ruleFormRef" :model="form" status-icon label-width="120px" class="demo-ruleForm">
-                <el-form-item label="实体名称" prop="name">
-                    <el-input v-model="form.name" autocomplete="off" @change="handleChangeName" />
-                </el-form-item>
-                <el-form-item label="实体高度" prop="height">
-                    <el-input-number v-model="form.height" :min="0" :max="1000" size="small" controls-position="right"
-                        @change="handleChangeHeight" /> 米
-                </el-form-item>
-                <el-form-item label="离地高度" prop="height">
-                    <el-input-number v-model="form.height" :min="0" :max="1000" size="small" controls-position="right"
-                        @change="handleChangeHeight" /> 米
-                </el-form-item>
-                <el-form-item label="是否隐藏" prop="show">
-                    <el-switch v-model="form.show" @change="handleChangeShow" />
-                </el-form-item>
-                <el-form-item label="实体颜色" prop="color">
-                    <el-color-picker v-model="form.color" show-alpha @change="handleChangeColor" color-format="hex" />
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" @click="handleSubmit">保存</el-button>
-                    <el-button @click="">重置</el-button>
-                </el-form-item>
-            </el-form>
-        </el-drawer> -->
+        <ModelDrawer v-model:drawer="modelDrawer" :tilesModel="tilesModel"></ModelDrawer>
+        <PolygonDrawer v-model:drawer="polygonDrawer" :polygonEntity="polygonEntity" ref="drawerPolygon"></PolygonDrawer>
     </div>
 </template>
    
@@ -43,6 +18,7 @@ import { onMounted, ref, reactive, toRefs } from 'vue';
 import { Polygon } from '@/components/Polygon/Polygon';
 import { Model } from '@/components/Model/models';
 import ModelDrawer from './components/modelDrawer.vue';
+import PolygonDrawer from './components/polygonDrawer.vue'
 
 const data = reactive({
     activeName: 'first', // 标签状态
@@ -67,7 +43,7 @@ const initMap = async () => {
         infoBox: false,
         selectionIndicator: false,
         // 添加地形服务
-        terrain: Cesium.Terrain.fromWorldTerrain(),
+        // terrain: Cesium.Terrain.fromWorldTerrain(),
     });
     // 相机飞入点
     viewer.value.camera.setView({
@@ -80,6 +56,7 @@ const initMap = async () => {
             roll: 0.0,
         },
     });
+    viewer.value.scene.globe.depthTestAgainstTerrain = true;
 };
 // polyGon实例
 let polygon: any;
@@ -91,14 +68,11 @@ const drawPolygon = () => {
 const editPolygon = () => {
     polygon.edit();
 };
-const endPolygonEdit = () => {
-    polygon.endEdit();
-};
-// 获取数据
-const getPolygonInfo = () => {
-    const data = polygon.getPolygonData();
-    console.log(data);
-};
+// // 获取数据
+// const getPolygonInfo = () => {
+//     const data = polygon.getPolygonData();
+//     console.log(data);
+// };
 let model: Model;
 // 添加model
 const addModel = () => {
@@ -108,14 +82,23 @@ const addModel = () => {
 const changeModel = () => {
     model.handlerLeftClick();
 };
-// 抽屉
-const drawer = ref(false);
+
+const modelDrawer = ref(false);
+const polygonDrawer = ref(false);
 // 模型实例
 const tilesModel = ref();
-// 点击获取实例
+// 点击获取模型信息
 const getTilesModel = (Cesium3DTileset: Cesium.Cesium3DTileset) => {
     tilesModel.value = Cesium3DTileset;
-    drawer.value = true;
+    modelDrawer.value = true;
+};
+// 点击获取图形信息
+// 图形实例
+const polygonEntity = ref();
+const getPolygon = (polygonInfo:Cesium.PolygonGraphics) => {
+    const polyhedron = polygon.drawPolyhedron()
+    polygonEntity.value = polyhedron
+    polygonDrawer.value = true;
 };
 
 // 修改名称
@@ -141,11 +124,12 @@ const handleSubmit = () => {
 onMounted(async () => {
     initMap();
     // viewer.value.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-    viewer.value.scene.globe.depthTestAgainstTerrain = true;
+    // viewer.value.scene.globe.depthTestAgainstTerrain = true;
     // 监听cesiumContainer的鼠标事件
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
     // 创建polyGon
     polygon = new Polygon(viewer.value, handler);
+    // polygon.handlerLeftClickCallBack = getPolygon;
     // 创建model
     model = new Model(viewer.value, handler);
     model.handlerLeftClickCallBack = getTilesModel;

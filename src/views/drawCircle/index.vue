@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import * as Cesium from "cesium";
 import { onMounted, ref } from "vue";
-import { Circle } from "@/components/Circle/Circle.ts";
+import { Circle } from "@/components/Circle/Circle";
 // 当前组件的实例
 const cesiumContainer = ref();
 // 创建Cesium Viewer

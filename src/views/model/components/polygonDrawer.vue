@@ -75,6 +75,8 @@ const handleSubmit = () => {
         ...form.value,
     }
     let data = local.getJSON('polygon')
+    console.log(polygonData)
+
     if(!data){
         data = [polygonData]
         local.setJSON('polygon', JSON.stringify(data))

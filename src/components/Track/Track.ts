@@ -131,7 +131,7 @@ export class Track {
                         transform = Cesium.Matrix4.fromRotationTranslation(
                             Cesium.Matrix3.fromQuaternion(newOrientation),
                             center
-                        );
+                        ); 
                         // transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromQuaternion(orientation), center);
                         this.viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(-50, 10, 30));
                     }
@@ -182,7 +182,7 @@ export class Track {
      * @param count 两个经纬度之间的点位
      * @returns
      */
-    createRoute = async (lngLatH: number[][], count: number = 30) => {
+    createRoute = async (lngLatH: number[][], count: number = 50) => {
         // 连个坐标点之间生成差值的数量
         // cartesian3 保存数组
         const cartesians: Cesium.Cartesian3[] = [];

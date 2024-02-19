@@ -108,6 +108,7 @@ const tilesetModel = () => {
     if (form.value.tileseVisible) {
         const polygonData = local.getJSON('polygon')
         const data = JSON.parse(polygonData)
+        console.log(data)
         data.map(item => {
             model.value.addTilesetModel(item)
         })
