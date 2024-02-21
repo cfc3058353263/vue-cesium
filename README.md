@@ -406,7 +406,9 @@ const viewer= new Cesium.Viewer('mycesium',{
         Cesium.ArcGisBaseMapType.SATELLITE
       )
     ),//设置底图图层，尽在baseLayerPicker属性设置为flase时有意义
-    terrainProvider:new Cesium.EllipsoidTerrainProvider(),//设置地形图层，仅在baseLayerPicker设置为false时有意义
+    // terrainProvider:new Cesium.EllipsoidTerrainProvider(),//设置地形图层，仅在baseLayerPicker设置为false时有意义
+    // 添加地形服务
+    terrain: Cesium.Terrain.fromWorldTerrain(),
     skyBox:new Cesium.skyBox({
         sources:{
             positiveX:'Cesium-1.7.1/Skybox/px.jpg',

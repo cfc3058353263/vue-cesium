@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import * as Cesium from 'cesium';
 import { onMounted, ref } from 'vue';
-import { Circle } from '@/components/Circle/Circle';
+import { rectangle } from '@/components/Rectangle/rectangle';
 // 当前组件的实例
 const cesiumContainer = ref();
 // 创建Cesium Viewer
@@ -28,6 +28,16 @@ const initMap = async () => {
         fullscreenButton: false,
         infoBox: false,
         selectionIndicator: false,
+        // baseLayer: new Cesium.ImageryLayer(
+        //     new Cesium.UrlTemplateImageryProvider({
+        //         url: 'http://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+        //         minimumLevel: 1,
+        //         maximumLevel: 18,
+        //     })
+        // ),
+        // terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
+        // terrainProvider:new Cesium.EllipsoidTerrainProvider(),
+        // terrain: Cesium.Terrain.fromWorldTerrain(),
     });
     // 相机飞入点
     viewer.value.camera.setView({
@@ -43,7 +53,7 @@ const initMap = async () => {
     });
 };
 // 开启绘制
-let drawCircle: Circle;
+let drawCircle: rectangle;
 const draw = () => {
     drawCircle.draw();
 };
@@ -51,10 +61,20 @@ const edit = () => {
     drawCircle.edit();
 };
 onMounted(async () => {
-    initMap();
+    await initMap();
+    // 高德地图
+    viewer.value.imageryLayers.add(
+        new Cesium.ImageryLayer(
+            new Cesium.UrlTemplateImageryProvider({
+                url: 'https://wprd01.is.autonavi.com/appmaptile?style=8&x={x}&y={y}&z={z}',
+                minimumLevel: 1,
+                maximumLevel: 18,
+            })
+        )
+    );
     // 监听cesiumContainer的鼠标事件
-    const handle = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
-    drawCircle = new Circle(viewer.value, handle);
+    const handle = await new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
+    drawCircle = await new rectangle(viewer.value, handle);
 });
 </script>
 

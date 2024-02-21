@@ -43,11 +43,11 @@ export const computeImgAndTxt = (url: string, label: string, size: number) => {
 // ]
 
 // 点聚合功能效果 pixelRange 设置聚合范围
-export const pointTogether = (viewer: Cesium.Viewer, data: any[], pixelRange: number = 25 ) => {
+export const pointTogether = (viewer: Cesium.Viewer, data: any[], pixelRange: number = 25) => {
     // 可用于手动或者自定义管理一组实体的 DataSource 实现。
     const customDataSource = new Cesium.CustomDataSource('pointTogether');
     data.map((item: any, index) => {
-        const id = item.id
+        const id = item.id;
         customDataSource.entities.add({
             id: id,
             type: 'billboard',
@@ -76,6 +76,14 @@ export const pointTogether = (viewer: Cesium.Viewer, data: any[], pixelRange: nu
                 show: true,
                 // heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
                 // disableDepthTestDistance: 99000000,
+            },
+            label: {
+                text: item.companyName,
+                font: '14px sans-serif',
+                // fillColor: Cesium.Color.PALEVIOLETRED,
+                // 偏移量
+                // eyeOffset: new Cesium.Cartesian3(0.0, 10.0, 15.0),
+                pixelOffset: new Cesium.Cartesian2(0, -35),
             },
         });
     });
@@ -140,5 +148,5 @@ export const pointTogether = (viewer: Cesium.Viewer, data: any[], pixelRange: nu
             cluster.billboard.height = 70;
         }
     });
-    return customDataSource
+    return customDataSource;
 };

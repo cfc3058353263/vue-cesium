@@ -2,7 +2,7 @@
     <div class="app-main">
         <div id="cesiumContainer">
             <div class="draw">
-                <el-button type="primary" @click="change2D3D">二维转换</el-button>
+                <el-button type="primary" @click="change2D3D">切换为二维</el-button>
             </div>
         </div>
     </div>
@@ -52,7 +52,8 @@ const initMap = async () => {
 
     // 开启地形深度检测
     viewer.value.scene.globe.depthTestAgainstTerrain = true;
-    viewer.value.scene.screenSpaceCameraController.maximumZoomDistance = 20000000; //相机高度的最大值
+    // 相机高度的最大值/最大放大比例
+    viewer.value.scene.screenSpaceCameraController.maximumZoomDistance = 20000000;
     var handler = new Cesium.ScreenSpaceEventHandler(viewer.value.canvas);
     const imageLayers = await viewer.value.imageryLayers;
     await imageLayers.remove(imageLayers.get(0));
@@ -64,7 +65,7 @@ const initMap = async () => {
         const pick = viewer.value.scene.pick(event.position);
         console.log(pick);
         // 点击聚合点放大到中心位置
-        if (pick.id.length && pick.id.length < 7) {
+        if (pick && pick.id instanceof Cesium.Entity && pick.id.length && pick.id.length < 7) {
             console.log(pick.id);
             //具体图标点击
             const lngArr: number[] = [];
@@ -85,7 +86,7 @@ const initMap = async () => {
             const averageLng = (lngMin + lngMax) / 2;
             const averageLat = (latMin + latMax) / 2;
             viewer.value.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(averageLng, averageLat, 30000),
+                destination: Cesium.Cartesian3.fromDegrees(averageLng, averageLat, 2000),
                 // destination: Cesium.Cartesian3.fromDegrees(center.geometry.coordinates[0], center.geometry.coordinates[1], 20000),
                 orientation: {
                     heading: Cesium.Math.toRadians(5),
@@ -94,7 +95,8 @@ const initMap = async () => {
                     duration: 1,
                 },
             });
-        } else if (pick.id instanceof Cesium.Entity && pick.id.type === 'billboard') {
+            // 点击标注
+        } else if (pick && pick.id instanceof Cesium.Entity && pick.id.type === 'billboard') {
             let centerResult = viewer.value.camera.pickEllipsoid(
                 new Cesium.Cartesian2(
                     viewer.value.canvas.clientWidth / 2,
@@ -112,15 +114,6 @@ const initMap = async () => {
             tileset = await model.add3dTileset('http://127.0.0.1:8888/model/b3dm/tileset.json');
             await model.update3dtilesMaxtrix(tileset, 0, 0, 0, 1, 43, lnglatH[0], lnglatH[1]);
             // 相机飞入
-            // viewer.value.camera.flyTo({
-            //     destination: Cesium.Cartesian3.fromDegrees(lnglatH[0], lnglatH[1], 3000),
-            //     orientation: {
-            //         heading: Cesium.Math.toRadians(-45),
-            //         pitch: Cesium.Math.toRadians(-90),
-            //         roll: 0.0,
-            //         duration: 1,
-            //     },
-            // });
             viewer.value.flyTo(tileset, {
                 duration: 1.5,
                 offset: {
@@ -129,6 +122,8 @@ const initMap = async () => {
                     range: 0,
                 },
             });
+            // 相机高度的最大值/最大放大比例
+            viewer.value.scene.screenSpaceCameraController.maximumZoomDistance = 1000000;
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     handler.setInputAction(function (event: any) {
@@ -149,33 +144,34 @@ const initMap = async () => {
         // console.log(cameraView);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     // 监听相机变换用于切换图层
-    viewer.value.camera.moveEnd.addEventListener(() => {
-        // 视高 km
-        // let alt = (viewer.value.camera.positionCartographic.height / 1000).toFixed(2);
-        let alt = viewer.value.camera.positionCartographic.height / 1000;
-        // 方位角
-        let heading = Cesium.Math.toDegrees(viewer.value.camera.heading).toFixed(2);
-        // 俯仰角
-        let pitch = Cesium.Math.toDegrees(viewer.value.camera.pitch).toFixed(2);
-        // 翻滚角
-        let roll = Cesium.Math.toDegrees(viewer.value.camera.roll).toFixed(2);
-        // 级别
-        let level = 0;
-        let tileRender = viewer.value.scene._globe._surface._tilesToRender;
-        if (tileRender && tileRender.length > 0) {
-            level = viewer.value.scene._globe._surface._tilesToRender[0]._level;
-        }
-        let str = `级数：${level} 视高：${alt}km  方位角：${heading}° 俯仰角：${pitch}° 翻滚角：${roll}°`;
-        // 856.73km
-        const imageLayers = viewer.value.imageryLayers;
-        if (alt < 856) {
-            console.log(imageLayers);
-            if (imageLayers._layers.length > 1) return;
-            imageLayers.addImageryProvider(tdMapCav, 1);
-        } else {
-            imageLayers.remove(imageLayers.get(1));
-        }
-    });
+    // viewer.value.camera.moveEnd.addEventListener(() => {
+    //     // 视高 km
+    //     // let alt = (viewer.value.camera.positionCartographic.height / 1000).toFixed(2);
+    //     let alt = viewer.value.camera.positionCartographic.height / 1000;
+    //     // 方位角
+    //     let heading = Cesium.Math.toDegrees(viewer.value.camera.heading).toFixed(2);
+    //     // 俯仰角
+    //     let pitch = Cesium.Math.toDegrees(viewer.value.camera.pitch).toFixed(2);
+    //     // 翻滚角
+    //     let roll = Cesium.Math.toDegrees(viewer.value.camera.roll).toFixed(2);
+    //     // 级别
+    //     let level = 0;
+    //     let tileRender = viewer.value.scene._globe._surface._tilesToRender;
+    //     if (tileRender && tileRender.length > 0) {
+    //         level = viewer.value.scene._globe._surface._tilesToRender[0]._level;
+    //     }
+    //     let str = `级数：${level} 视高：${alt}km  方位角：${heading}° 俯仰角：${pitch}° 翻滚角：${roll}°`;
+    //     // 856.73km
+    //     const imageLayers = viewer.value.imageryLayers;
+    //     if (alt < 856) {
+    //         console.log(imageLayers);
+    //         if (imageLayers._layers.length > 1) return;
+    //         imageLayers.addImageryProvider(tdMapCav, 1);
+    //     } else {
+    //         imageLayers.remove(imageLayers.get(1));
+    //     }
+    // });
+    // 监听鼠标滑轮
     handler.setInputAction(function (event: any) {
         var camera = viewer.value.camera;
         var position = camera.position;
@@ -192,10 +188,12 @@ const initMap = async () => {
             roll: Cesium.Math.toDegrees(roll),
         };
         console.log(cameraView);
+        // 相机视高 km
         let alt = viewer.value.camera.positionCartographic.height / 1000;
+        console.log(alt);
         const imageLayers = viewer.value.imageryLayers;
+        // 判断当前缩放比例来进行图层添加和移除
         if (alt < 856) {
-            console.log(imageLayers);
             if (imageLayers._layers.length > 1) return;
             imageLayers.addImageryProvider(tdMapCav, 1);
         } else {
@@ -252,8 +250,10 @@ const addSDGeoJsonData = () => {
     });
 };
 
-// 二维三维转换
+// 二维转换
 const change2D3D = () => {
+    // 相机高度的最大值/最大放大比例
+    viewer.value.scene.screenSpaceCameraController.maximumZoomDistance = 20000000;
     // canvas 中心位置为相机焦点
     let cartesian2 = new Cesium.Cartesian2(
         Math.floor(viewer.value.canvas.clientWidth / 2),
@@ -263,14 +263,14 @@ const change2D3D = () => {
     let cartesian3 = viewer.value.scene.camera.pickEllipsoid(cartesian2, viewer.value.scene.globe.ellipsoid);
     const lnglat = cartesian3_to_lng_lat(cartesian3);
     const cameraHeight = Math.round(viewer.value.camera.positionCartographic.height);
-    // 相机飞入点
-    viewer.value.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(lnglat[0], lnglat[1], 800000),
 
-    });
     viewer.value.scene.primitives.remove(tileset);
     viewer.value.scene.morphTo2D(0);
     customDataSource = pointTogether(viewer.value, data);
+    // 相机飞入点
+    viewer.value.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lnglat[0], lnglat[1], 1000000),
+    });
 };
 
 // customDataSource

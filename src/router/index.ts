@@ -109,6 +109,19 @@ export const constantRoutes: RouteRecordRaw[] = [
         ],
     },
     {
+        path: '/drawRectangle',
+        component: Layout,
+        redirect: '/drawCirdrawRectanglecle',
+        children: [
+            {
+                path: '/drawRectangle',
+                component: () => import('@/views/drawRectangle/index.vue'),
+                name: 'DrawRectangle',
+                meta: { title: '绘制矩形', icon: 'dashboard', affix: true },
+            },
+        ],
+    },
+    {
         path: '/model',
         component: Layout,
         redirect: '/model',
